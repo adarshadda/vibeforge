@@ -4,331 +4,902 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VibeForge — Create content before your coffee gets cold</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #04060a;
-      --card-bg: rgba(10, 15, 28, 0.65);
-      --accent: #7c6fff;
-      --accent-glow: rgba(124, 111, 255, 0.15);
-      --pink: #ff7eb3;
-      --indigo: #6366f1;
-      --cyan: #06b6d4;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-focus: rgba(124, 111, 255, 0.4);
-      --font-sans: 'Inter', sans-serif;
-      --font-display: 'Space Grotesk', sans-serif;
+      --void: #050208;
+      --deep: #0c0618;
+      --surface: rgba(18, 8, 36, 0.72);
+      --violet-900: #1a0a2e;
+      --violet-700: #5b21b6;
+      --violet-500: #8b5cf6;
+      --violet-400: #a78bfa;
+      --violet-300: #c4b5fd;
+      --magenta: #d946ef;
+      --plum: #7e22ce;
+      --glow: rgba(139, 92, 246, 0.45);
+      --glow-soft: rgba(217, 70, 239, 0.12);
+      --text: #ede9fe;
+      --text-dim: #a78bfa99;
+      --text-muted: #8b7cb8;
+      --border: rgba(167, 139, 250, 0.12);
+      --border-bright: rgba(196, 181, 253, 0.28);
+      --font-display: 'Syne', sans-serif;
+      --font-serif: 'Instrument Serif', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
 
     body {
-      background-color: var(--bg);
+      background: var(--void);
       color: var(--text);
-      font-family: var(--font-sans);
+      font-family: var(--font-body);
       min-height: 100vh;
       overflow-x: hidden;
-      position: relative;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Grid Background Effect */
-    body::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* Floating Blurry Orbs */
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(120px);
-      opacity: 0.3;
+    /* ── Color-graded atmosphere ── */
+    .atmosphere {
+      position: fixed;
+      inset: 0;
       z-index: 0;
       pointer-events: none;
-    }
-    .orb-1 {
-      top: 10%;
-      left: 15%;
-      width: 400px;
-      height: 400px;
-      background: var(--indigo);
-    }
-    .orb-2 {
-      top: 40%;
-      right: 10%;
-      width: 500px;
-      height: 500px;
-      background: var(--pink);
-    }
-    .orb-3 {
-      bottom: 5%;
-      left: 20%;
-      width: 450px;
-      height: 450px;
-      background: var(--cyan);
+      overflow: hidden;
     }
 
+    .atmosphere__wash {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 90% 60% at 50% -10%, rgba(91, 33, 182, 0.55) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 50% at 100% 30%, rgba(217, 70, 239, 0.22) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 45% at 0% 70%, rgba(126, 34, 206, 0.35) 0%, transparent 45%),
+        linear-gradient(180deg, #0a0314 0%, var(--void) 40%, #080212 100%);
+    }
+
+    .atmosphere__mesh {
+      position: absolute;
+      width: 140%;
+      height: 140%;
+      top: -20%;
+      left: -20%;
+      background:
+        conic-gradient(from 220deg at 30% 40%, transparent 0deg, rgba(139, 92, 246, 0.08) 60deg, transparent 120deg),
+        conic-gradient(from 40deg at 70% 60%, transparent 0deg, rgba(217, 70, 239, 0.06) 80deg, transparent 160deg);
+      animation: mesh-drift 28s ease-in-out infinite alternate;
+    }
+
+    @keyframes mesh-drift {
+      0% { transform: rotate(0deg) scale(1); }
+      100% { transform: rotate(8deg) scale(1.05); }
+    }
+
+    .atmosphere__grain {
+      position: absolute;
+      inset: 0;
+      opacity: 0.35;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+      background-size: 128px 128px;
+    }
+
+    .atmosphere__vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(5, 2, 8, 0.85) 100%);
+    }
+
+    .atmosphere__lines {
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(139, 92, 246, 0.015) 2px,
+        rgba(139, 92, 246, 0.015) 3px
+      );
+      mask-image: linear-gradient(180deg, transparent, black 15%, black 85%, transparent);
+    }
+
+    /* Cursor spotlight */
+    .spotlight {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.4s;
+      opacity: 0;
+    }
+
+    body:hover .spotlight { opacity: 1; }
+
+    /* ── Header ── */
     header {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      padding: 20px 40px;
+      right: 0;
+      padding: 18px 32px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(4, 6, 10, 0.7);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      z-index: 100;
+      z-index: 200;
+      transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s;
     }
 
-    .logo-container {
+    header.scrolled {
+      background: rgba(12, 6, 24, 0.75);
+      backdrop-filter: blur(20px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       text-decoration: none;
+      color: inherit;
     }
 
-    .logo-icon {
-      font-size: 24px;
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      position: relative;
     }
 
-    .logo-text {
+    .logo-mark svg { width: 100%; height: 100%; }
+
+    .logo-name {
       font-family: var(--font-display);
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
-      background: linear-gradient(135deg, var(--accent), var(--pink));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.03em;
     }
 
-    .nav-buttons {
+    .nav {
       display: flex;
-      gap: 15px;
+      align-items: center;
+      gap: 12px;
     }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 14px;
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover { color: var(--violet-300); }
 
     .btn {
-      padding: 10px 20px;
-      border-radius: 8px;
+      font-family: var(--font-body);
       font-size: 14px;
       font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 100px;
       cursor: pointer;
-      font-family: var(--font-sans);
-      transition: all 0.2s ease;
+      border: none;
+      transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s, background 0.25s;
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      text-decoration: none;
     }
 
-    .btn-secondary {
+    .btn-ghost {
       background: transparent;
-      border: 1px solid var(--border);
       color: var(--text);
+      border: 1px solid var(--border);
     }
 
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--text-muted);
+    .btn-ghost:hover {
+      border-color: var(--border-bright);
+      background: rgba(139, 92, 246, 0.08);
     }
 
-    .btn-primary {
-      background: var(--accent);
-      border: 1px solid var(--accent);
-      color: #ffffff;
-      box-shadow: 0 4px 14px var(--accent-glow);
+    .btn-glow {
+      background: linear-gradient(135deg, var(--violet-500), var(--magenta));
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1) inset, 0 8px 32px -8px var(--glow);
+      position: relative;
+      overflow: hidden;
     }
 
-    .btn-primary:hover {
-      background: #6a5fff;
-      transform: translateY(-1px);
+    .btn-glow::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
     }
 
-    /* Hero Section */
+    .btn-glow:hover::before { transform: translateX(100%); }
+    .btn-glow:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset, 0 12px 40px -6px var(--glow); }
+
+    .btn-lg { padding: 14px 28px; font-size: 15px; }
+
+    /* ── Hero ── */
     .hero {
       position: relative;
-      max-width: 1200px;
-      margin: 160px auto 100px;
-      padding: 0 40px;
-      text-align: center;
       z-index: 10;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 140px 32px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      min-height: 100vh;
     }
 
-    .badge {
+    .hero-content { max-width: 560px; }
+
+    .eyebrow {
       display: inline-flex;
-      padding: 6px 16px;
-      border-radius: 20px;
-      background: rgba(124, 111, 255, 0.1);
-      border: 1px solid rgba(124, 111, 255, 0.3);
-      color: #a99fff;
-      font-size: 12px;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
       font-weight: 600;
-      margin-bottom: 24px;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      animation: float 3s ease-in-out infinite;
+      color: var(--violet-400);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fade-up 0.8s var(--ease-out-expo) 0.1s forwards;
     }
 
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-4px); }
+    .eyebrow-line {
+      width: 32px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--violet-500), transparent);
+    }
+
+    .eyebrow-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--magenta);
+      box-shadow: 0 0 12px var(--magenta);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
     }
 
     h1 {
       font-family: var(--font-display);
-      font-size: 64px;
+      font-size: clamp(42px, 5.5vw, 68px);
       font-weight: 800;
-      line-height: 1.15;
+      line-height: 1.02;
+      letter-spacing: -0.04em;
       margin-bottom: 24px;
+    }
+
+    .hero-line {
+      display: block;
+      overflow: hidden;
+    }
+
+    .hero-line span {
+      display: block;
+      transform: translateY(110%);
+      animation: line-reveal 1s var(--ease-out-expo) forwards;
+    }
+
+    .hero-line:nth-child(1) span { animation-delay: 0.15s; }
+    .hero-line:nth-child(2) span { animation-delay: 0.28s; }
+    .hero-line:nth-child(3) span { animation-delay: 0.41s; }
+
+    @keyframes line-reveal {
+      to { transform: translateY(0); }
+    }
+
+    .hero-accent {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      background: linear-gradient(120deg, var(--violet-300) 0%, var(--magenta) 50%, var(--violet-400) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 1.05em;
+    }
+
+    .hero-desc {
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      max-width: 480px;
+      opacity: 0;
+      animation: fade-up 0.9s var(--ease-out-expo) 0.55s forwards;
+    }
+
+    .hero-cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      opacity: 0;
+      animation: fade-up 0.9s var(--ease-out-expo) 0.7s forwards;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      opacity: 0;
+      animation: fade-up 0.9s var(--ease-out-expo) 0.85s forwards;
+    }
+
+    .stat-num {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--violet-300);
       letter-spacing: -0.02em;
     }
 
-    h1 span {
-      background: linear-gradient(135deg, var(--accent) 20%, var(--pink) 80%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .tagline {
-      font-size: 22px;
+    .stat-label {
+      font-size: 12px;
       color: var(--text-muted);
-      max-width: 700px;
-      margin: 0 auto 40px;
-      line-height: 1.5;
+      margin-top: 4px;
+      letter-spacing: 0.02em;
     }
 
-    .tagline strong {
-      color: var(--text);
-    }
-
-    /* Features Grid */
-    .features {
-      max-width: 1200px;
-      margin: 80px auto;
-      padding: 0 40px;
+    /* Hero preview mock */
+    .hero-preview {
       position: relative;
-      z-index: 10;
+      opacity: 0;
+      animation: preview-in 1.2s var(--ease-out-expo) 0.4s forwards;
     }
 
-    .features-title {
-      text-align: center;
-      margin-bottom: 50px;
+    @keyframes preview-in {
+      from { opacity: 0; transform: perspective(1200px) rotateY(-8deg) translateX(40px); }
+      to { opacity: 1; transform: perspective(1200px) rotateY(-2deg) translateX(0); }
     }
 
-    .features-title h2 {
-      font-family: var(--font-display);
-      font-size: 36px;
-      font-weight: 700;
-      margin-bottom: 12px;
+    .preview-frame {
+      position: relative;
+      border-radius: 20px;
+      border: 1px solid var(--border-bright);
+      background: var(--surface);
+      backdrop-filter: blur(24px);
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 40px 80px -20px rgba(0,0,0,0.7),
+        0 0 120px -40px var(--glow-soft);
     }
 
-    .features-title p {
+    .preview-chrome {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.25);
+    }
+
+    .preview-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(167, 139, 250, 0.25);
+    }
+
+    .preview-dot:nth-child(1) { background: #7c3aed; }
+    .preview-dot:nth-child(2) { background: #a855f7; opacity: 0.6; }
+    .preview-dot:nth-child(3) { background: #c084fc; opacity: 0.35; }
+
+    .preview-title {
+      margin-left: 12px;
+      font-size: 11px;
       color: var(--text-muted);
-      font-size: 16px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px;
+    .preview-body { padding: 20px; }
+
+    .preview-pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .feature-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .feature-card:hover {
-      transform: translateY(-6px);
-      border-color: var(--border-focus);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-    }
-
-    .feature-icon {
-      width: 48px;
-      height: 48px;
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
+      background: rgba(139, 92, 246, 0.04);
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    .pipeline-step.active {
+      border-color: rgba(217, 70, 239, 0.4);
+      background: rgba(139, 92, 246, 0.12);
+    }
+
+    .pipeline-step.done { opacity: 0.55; }
+
+    .step-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
-      margin-bottom: 24px;
-      color: var(--accent);
+      background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(217,70,239,0.15));
+      flex-shrink: 0;
     }
 
-    .feature-card h3 {
+    .step-icon svg { width: 18px; height: 18px; stroke: var(--violet-300); }
+
+    .step-text h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .step-text p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .step-bar {
+      margin-left: auto;
+      width: 48px;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(139, 92, 246, 0.2);
+      overflow: hidden;
+    }
+
+    .step-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--violet-500), var(--magenta));
+      border-radius: 2px;
+      width: 0;
+      transition: width 0.6s var(--ease-out-expo);
+    }
+
+    .pipeline-step.active .step-bar-fill { width: 72%; animation: bar-pulse 1.5s ease-in-out infinite; }
+    .pipeline-step.done .step-bar-fill { width: 100%; }
+
+    @keyframes bar-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .preview-glow-orb {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+      filter: blur(40px);
+      top: -60px;
+      right: -40px;
+      animation: orb-float 6s ease-in-out infinite;
+    }
+
+    @keyframes orb-float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-20px, 15px); }
+    }
+
+    /* ── Marquee ── */
+    .marquee-wrap {
+      position: relative;
+      z-index: 10;
+      padding: 24px 0;
+      border-block: 1px solid var(--border);
+      background: rgba(12, 6, 24, 0.5);
+      overflow: hidden;
+      mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee 35s linear infinite;
+    }
+
+    .marquee-track:hover { animation-play-state: paused; }
+
+    @keyframes marquee {
+      to { transform: translateX(-50%); }
+    }
+
+    .marquee-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 32px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .marquee-item::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--violet-500);
+    }
+
+    /* ── Pipeline section ── */
+    .pipeline-section {
+      position: relative;
+      z-index: 10;
+      max-width: 1100px;
+      margin: 100px auto;
+      padding: 0 32px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--violet-400);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .section-title em {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      color: var(--violet-300);
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 520px;
+      line-height: 1.6;
+      margin-bottom: 56px;
+    }
+
+    .flow-diagram {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      position: relative;
+    }
+
+    .flow-diagram::before {
+      content: '';
+      position: absolute;
+      top: 44px;
+      left: 12%;
+      right: 12%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--violet-700), var(--magenta), var(--violet-700), transparent);
+      opacity: 0.5;
+    }
+
+    .flow-node {
+      text-align: center;
+      padding: 0 16px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s var(--ease-out-expo), transform 0.7s var(--ease-out-expo);
+    }
+
+    .flow-node.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .flow-node:nth-child(1) { transition-delay: 0s; }
+    .flow-node:nth-child(2) { transition-delay: 0.1s; }
+    .flow-node:nth-child(3) { transition-delay: 0.2s; }
+    .flow-node:nth-child(4) { transition-delay: 0.3s; }
+
+    .flow-circle {
+      width: 88px;
+      height: 88px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      border: 1px solid var(--border-bright);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      transition: box-shadow 0.4s, border-color 0.4s;
+    }
+
+    .flow-node:hover .flow-circle {
+      border-color: var(--violet-500);
+      box-shadow: 0 0 40px -10px var(--glow);
+    }
+
+    .flow-circle span {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--violet-400);
+    }
+
+    .flow-node h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .flow-node p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ── Bento features ── */
+    .features {
+      position: relative;
+      z-index: 10;
+      max-width: 1200px;
+      margin: 120px auto;
+      padding: 0 32px;
+    }
+
+    .features-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      margin-bottom: 48px;
+      flex-wrap: wrap;
+    }
+
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: minmax(180px, auto);
+      gap: 16px;
+    }
+
+    .bento-card {
+      position: relative;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      padding: 28px 32px;
+      overflow: hidden;
+      transition: transform 0.45s var(--ease-out-expo), border-color 0.35s, box-shadow 0.45s;
+      opacity: 0;
+      transform: translateY(40px);
+    }
+
+    .bento-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .bento-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(167,139,250,0.3), transparent 50%, rgba(217,70,239,0.15));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+    }
+
+    .bento-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-bright);
+      box-shadow: 0 24px 48px -16px rgba(0,0,0,0.5), 0 0 60px -20px var(--glow-soft);
+    }
+
+    .bento-card:hover::before { opacity: 1; }
+
+    .bento-card.span-8 { grid-column: span 8; }
+    .bento-card.span-4 { grid-column: span 4; }
+    .bento-card.span-6 { grid-column: span 6; }
+    .bento-card.span-12 { grid-column: span 12; }
+    .bento-card.tall { grid-row: span 2; }
+
+    .card-glow {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+    }
+
+    .bento-card:hover .card-glow { opacity: 0.35; }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      background: linear-gradient(145deg, rgba(139,92,246,0.25), rgba(91,33,182,0.15));
+      border: 1px solid var(--border);
+    }
+
+    .card-icon svg { width: 22px; height: 22px; stroke: var(--violet-300); fill: none; stroke-width: 1.5; }
+
+    .bento-card h3 {
       font-family: var(--font-display);
       font-size: 20px;
       font-weight: 600;
-      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
     }
 
-    .feature-card p {
-      color: var(--text-muted);
+    .bento-card p {
       font-size: 14px;
-      line-height: 1.6;
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-width: 420px;
     }
 
-    /* Modal Overlay styling */
+    .bento-card .card-tag {
+      display: inline-block;
+      margin-top: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--violet-400);
+      padding: 4px 10px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: rgba(139, 92, 246, 0.08);
+    }
+
+    /* ── CTA band ── */
+    .cta-band {
+      position: relative;
+      z-index: 10;
+      max-width: 900px;
+      margin: 80px auto 100px;
+      padding: 56px 48px;
+      text-align: center;
+      border-radius: 24px;
+      border: 1px solid var(--border-bright);
+      background:
+        linear-gradient(135deg, rgba(91,33,182,0.25) 0%, rgba(12,6,24,0.9) 50%, rgba(217,70,239,0.12) 100%);
+      overflow: hidden;
+      opacity: 0;
+      transform: scale(0.96);
+      transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+    }
+
+    .cta-band.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .cta-band::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .cta-band h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .cta-band p {
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    .cta-band .btn { position: relative; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 40px 32px 48px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    footer span { color: var(--violet-400); }
+
+    /* ── Auth modal ── */
     .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(2, 4, 8, 0.85);
-      backdrop-filter: blur(12px);
+      inset: 0;
+      background: rgba(5, 2, 8, 0.88);
+      backdrop-filter: blur(20px) saturate(1.2);
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: all 0.3s ease;
+      transition: opacity 0.35s;
       z-index: 1000;
     }
 
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
     .auth-card {
-      background: #0d111d;
-      border: 1px solid var(--border);
-      border-radius: 20px;
+      background: linear-gradient(160deg, #14082a 0%, #0c0618 100%);
+      border: 1px solid var(--border-bright);
+      border-radius: 24px;
       width: 100%;
       max-width: 420px;
       padding: 40px;
-      transform: scale(0.92);
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.45s var(--ease-spring);
+      box-shadow: 0 32px 64px -16px rgba(0,0,0,0.6), 0 0 80px -30px var(--glow-soft);
+      position: relative;
     }
 
     .modal-overlay.active .auth-card {
-      transform: scale(1);
+      transform: scale(1) translateY(0);
     }
 
     .auth-tabs {
@@ -346,81 +917,64 @@
       color: var(--text-muted);
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      transition: all 0.2s;
+      transition: color 0.2s, border-color 0.2s;
     }
 
     .auth-tab.active {
       color: var(--text);
-      border-color: var(--accent);
+      border-color: var(--violet-500);
     }
 
-    .form-group {
-      margin-bottom: 20px;
-    }
+    .form-group { margin-bottom: 20px; }
 
     .form-group label {
       display: block;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       color: var(--text-muted);
       margin-bottom: 8px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.1em;
     }
 
     .form-input {
       width: 100%;
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(139, 92, 246, 0.06);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 12px 16px;
       color: var(--text);
-      font-family: var(--font-sans);
+      font-family: var(--font-body);
       font-size: 14px;
       outline: none;
-      transition: border 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
     .form-input:focus {
-      border-color: var(--accent);
-      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--violet-500);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
     }
 
     .auth-submit-btn {
       width: 100%;
       padding: 14px;
-      border-radius: 8px;
+      border-radius: 100px;
       font-size: 15px;
       font-weight: 700;
       border: none;
-      background: var(--accent);
-      color: #ffffff;
+      background: linear-gradient(135deg, var(--violet-500), var(--magenta));
+      color: #fff;
       cursor: pointer;
-      transition: background 0.2s;
-      margin-top: 10px;
-      box-shadow: 0 4px 12px var(--accent-glow);
+      margin-top: 8px;
+      font-family: var(--font-body);
+      transition: opacity 0.2s, transform 0.2s;
     }
 
-    .auth-submit-btn:hover {
-      background: #6a5fff;
-    }
+    .auth-submit-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+    .auth-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .auth-error {
-      background: rgba(239, 68, 68, 0.08);
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      border-radius: 8px;
-      color: #ef4444;
-      padding: 12px;
-      font-size: 13px;
-      margin-bottom: 20px;
-      display: none;
-    }
-
-    .auth-success {
-      background: rgba(34, 197, 94, 0.08);
-      border: 1px solid rgba(34, 197, 94, 0.25);
-      border-radius: 8px;
-      color: #22c55e;
+    .auth-error, .auth-success {
+      border-radius: 12px;
       padding: 12px;
       font-size: 13px;
       margin-bottom: 20px;
@@ -428,141 +982,340 @@
       line-height: 1.4;
     }
 
+    .auth-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .auth-success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #4ade80;
+    }
+
     .close-modal {
       position: absolute;
-      top: 24px;
-      right: 24px;
+      top: 20px;
+      right: 20px;
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 20px;
+      font-size: 24px;
       cursor: pointer;
+      line-height: 1;
       transition: color 0.2s;
     }
 
-    .close-modal:hover {
-      color: var(--text);
+    .close-modal:hover { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 120px;
+        min-height: auto;
+      }
+      .hero-preview { order: -1; max-width: 480px; margin: 0 auto; }
+      .flow-diagram { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+      .flow-diagram::before { display: none; }
+      .bento-card.span-8, .bento-card.span-4, .bento-card.span-6, .bento-card.span-12 {
+        grid-column: span 12;
+      }
+      .nav-link { display: none; }
     }
 
-    footer {
-      text-align: center;
-      padding: 60px 40px;
-      border-top: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 14px;
-      z-index: 10;
-      position: relative;
+    @media (max-width: 600px) {
+      header { padding: 14px 20px; }
+      .hero { padding: 100px 20px 60px; }
+      .hero-stats { flex-direction: column; gap: 20px; }
+      .features, .pipeline-section { padding: 0 20px; }
+      .cta-band { margin-inline: 20px; padding: 40px 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .marquee-track { animation: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Background Orbs -->
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
+  <div class="atmosphere" aria-hidden="true">
+    <div class="atmosphere__wash"></div>
+    <div class="atmosphere__mesh"></div>
+    <div class="atmosphere__lines"></div>
+    <div class="atmosphere__grain"></div>
+    <div class="atmosphere__vignette"></div>
+  </div>
 
-  <!-- Header -->
-  <header>
-    <a href="#" class="logo-container">
-      <span class="logo-icon">⚡</span>
-      <span class="logo-text">VibeForge</span>
+  <div class="spotlight" id="spotlight" aria-hidden="true"></div>
+
+  <header id="header">
+    <a href="#" class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="36" height="36" rx="10" fill="url(#logo-grad)"/>
+          <path d="M11 24V12l7 6 7-6v12" stroke="#ede9fe" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="logo-grad" x1="0" y1="0" x2="36" y2="36">
+              <stop stop-color="#7c3aed"/>
+              <stop offset="1" stop-color="#d946ef"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="logo-name">VibeForge</span>
     </a>
-    <div class="nav-buttons">
-      <button class="btn btn-secondary" onclick="openAuthModal('login')">Sign In</button>
-      <button class="btn btn-primary" onclick="openAuthModal('signup')">Get Started</button>
-    </div>
+    <nav class="nav">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#pipeline" class="nav-link">Pipeline</a>
+      <button class="btn btn-ghost" onclick="openAuthModal('login')">Sign In</button>
+      <button class="btn btn-glow" onclick="openAuthModal('signup')">Get Started</button>
+    </nav>
   </header>
 
-  <!-- Hero Section -->
   <section class="hero">
-    <div class="badge">🚀 Unified Video Studio</div>
-    <h1>Create content before your <span>coffee gets cold.</span></h1>
-    <p class="tagline">
-      Write stories and generate full production-ready videos in one click. 
-      <strong>VibeForge</strong> fuses LLM intelligence, child-voice synthesis, and runway parallel scene rendering into one unified content factory.
-    </p>
-    <div style="display:flex; justify-content:center; gap:16px;">
-      <button class="btn btn-primary" style="padding:14px 28px; font-size:16px;" onclick="openAuthModal('signup')">
-        Start Creating Now <span style="font-size:18px;">✨</span>
-      </button>
-      <a href="#features" class="btn btn-secondary" style="padding:14px 28px; font-size:16px;">See How It Works</a>
+    <div class="hero-content">
+      <div class="eyebrow">
+        <span class="eyebrow-line"></span>
+        <span class="eyebrow-pulse"></span>
+        Unified video studio
+      </div>
+
+      <h1>
+        <span class="hero-line"><span>Ship videos</span></span>
+        <span class="hero-line"><span>before your</span></span>
+        <span class="hero-line"><span><span class="hero-accent">coffee cools.</span></span></span>
+      </h1>
+
+      <p class="hero-desc">
+        One prompt becomes a full vertical video — scripted, voiced, and rendered in parallel.
+        VibeForge chains LLM storycraft, ElevenLabs narration, and Runway scene generation into a single pipeline.
+      </p>
+
+      <div class="hero-cta">
+        <button class="btn btn-glow btn-lg" onclick="openAuthModal('signup')">Start creating</button>
+        <a href="#pipeline" class="btn btn-ghost btn-lg">See the pipeline</a>
+      </div>
+
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num" data-count="80">0</div>
+          <div class="stat-label">% faster parallel renders</div>
+        </div>
+        <div>
+          <div class="stat-num" data-count="9">0</div>
+          <div class="stat-label">:16 vertical native</div>
+        </div>
+        <div>
+          <div class="stat-num" data-count="1">0</div>
+          <div class="stat-label">click full production</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-preview">
+      <div class="preview-frame">
+        <div class="preview-glow-orb"></div>
+        <div class="preview-chrome">
+          <span class="preview-dot"></span>
+          <span class="preview-dot"></span>
+          <span class="preview-dot"></span>
+          <span class="preview-title">Studio — generation in progress</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-pipeline" id="preview-pipeline">
+            <div class="pipeline-step done" data-step="0">
+              <div class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </div>
+              <div class="step-text">
+                <h4>Story & scenes</h4>
+                <p>Claude · Gemini narrative arc</p>
+              </div>
+              <div class="step-bar"><div class="step-bar-fill"></div></div>
+            </div>
+            <div class="pipeline-step done" data-step="1">
+              <div class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>
+              </div>
+              <div class="step-text">
+                <h4>Voice synthesis</h4>
+                <p>ElevenLabs child narrator</p>
+              </div>
+              <div class="step-bar"><div class="step-bar-fill"></div></div>
+            </div>
+            <div class="pipeline-step active" data-step="2">
+              <div class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              </div>
+              <div class="step-text">
+                <h4>Parallel render</h4>
+                <p>Runway · 4 scenes concurrent</p>
+              </div>
+              <div class="step-bar"><div class="step-bar-fill"></div></div>
+            </div>
+            <div class="pipeline-step" data-step="3">
+              <div class="step-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              </div>
+              <div class="step-text">
+                <h4>Export</h4>
+                <p>9:16 MP4 ready to post</p>
+              </div>
+              <div class="step-bar"><div class="step-bar-fill"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- Features Section -->
+  <div class="marquee-wrap" aria-hidden="true">
+    <div class="marquee-track">
+      <span class="marquee-item">Claude & Gemini</span>
+      <span class="marquee-item">ElevenLabs voices</span>
+      <span class="marquee-item">Runway Gen-3</span>
+      <span class="marquee-item">9:16 vertical</span>
+      <span class="marquee-item">Parallel scenes</span>
+      <span class="marquee-item">Character lock</span>
+      <span class="marquee-item">30-day planner</span>
+      <span class="marquee-item">Generation history</span>
+      <span class="marquee-item">Claude & Gemini</span>
+      <span class="marquee-item">ElevenLabs voices</span>
+      <span class="marquee-item">Runway Gen-3</span>
+      <span class="marquee-item">9:16 vertical</span>
+      <span class="marquee-item">Parallel scenes</span>
+      <span class="marquee-item">Character lock</span>
+      <span class="marquee-item">30-day planner</span>
+      <span class="marquee-item">Generation history</span>
+    </div>
+  </div>
+
+  <section class="pipeline-section" id="pipeline">
+    <p class="section-label reveal">How it flows</p>
+    <h2 class="section-title reveal">Prompt to publish in <em>four beats</em></h2>
+    <p class="section-desc reveal">No tab-hopping between tools. Each stage feeds the next automatically inside one studio session.</p>
+
+    <div class="flow-diagram">
+      <div class="flow-node">
+        <div class="flow-circle"><span>01</span></div>
+        <h3>Write</h3>
+        <p>LLMs draft scenes, narration, and visual prompts from your idea.</p>
+      </div>
+      <div class="flow-node">
+        <div class="flow-circle"><span>02</span></div>
+        <h3>Voice</h3>
+        <p>Scripts become timed audio with expressive child or warm presets.</p>
+      </div>
+      <div class="flow-node">
+        <div class="flow-circle"><span>03</span></div>
+        <h3>Render</h3>
+        <p>All scenes fire in parallel — vertical 9:16, character-locked.</p>
+      </div>
+      <div class="flow-node">
+        <div class="flow-circle"><span>04</span></div>
+        <h3>Ship</h3>
+        <p>Download, schedule, or revisit from your generation archive.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="features" id="features">
-    <div class="features-title">
-      <h2>One Platform. Full Automation.</h2>
-      <p>Everything you need to go from a simple prompt to a high-retention video.</p>
+    <div class="features-header">
+      <div>
+        <p class="section-label reveal">Capabilities</p>
+        <h2 class="section-title reveal">Built for <em>volume creators</em></h2>
+      </div>
+      <p class="section-desc reveal" style="margin-bottom:0; text-align:right; max-width:340px;">
+        Every tool you were duct-taping together — now one graded pipeline.
+      </p>
     </div>
-    <div class="features-grid">
-      
-      <!-- Feature 1 -->
-      <div class="feature-card">
-        <div class="feature-icon">📝</div>
-        <h3>Story Generation</h3>
-        <p>State-of-the-art LLMs (Claude & Gemini) generate rich narrative arcs, optimized video scenes, and narration scripts in seconds.</p>
-      </div>
 
-      <!-- Feature 2 -->
-      <div class="feature-card">
-        <div class="feature-icon">🎙️</div>
-        <h3>Voice & Audio Synthesis</h3>
-        <p>Premium ElevenLabs integration converts scripts into expressive child narrator voices or warm voice presets with automatic timing.</p>
-      </div>
+    <div class="bento">
+      <article class="bento-card span-8 tall">
+        <div class="card-glow" style="background:var(--violet-500); top:-40px; right:-40px;"></div>
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <h3>Story generation</h3>
+        <p>Claude and Gemini produce narrative arcs, scene breakdowns, and narration scripts tuned for short-form retention — not generic blog posts repurposed as video.</p>
+        <span class="card-tag">LLM orchestration</span>
+      </article>
 
-      <!-- Feature 3 -->
-      <div class="feature-card">
-        <div class="feature-icon">🎬</div>
-        <h3>Runway Parallel Rendering</h3>
-        <p>Renders all scenes concurrently in 9:16 vertical video format, cutting standard processing time by up to 80%.</p>
-      </div>
+      <article class="bento-card span-4">
+        <div class="card-glow" style="background:var(--magenta); top:50%; left:-30px;"></div>
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+        </div>
+        <h3>Voice synthesis</h3>
+        <p>ElevenLabs child narrators and warm presets with automatic scene timing.</p>
+      </article>
 
-      <!-- Feature 4 -->
-      <div class="feature-card">
-        <div class="feature-icon">🧸</div>
-        <h3>Character Consistency</h3>
-        <p>Define prompts for specific characters and automatically inject visual attributes across all scene prompts.</p>
-      </div>
+      <article class="bento-card span-4">
+        <div class="card-glow" style="background:var(--plum); bottom:-20px; right:20px;"></div>
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        </div>
+        <h3>Parallel rendering</h3>
+        <p>Runway renders every scene at once in native 9:16 — up to 80% faster than sequential.</p>
+      </article>
 
-      <!-- Feature 5 -->
-      <div class="feature-card">
-        <div class="feature-icon">📅</div>
-        <h3>Content Planning</h3>
-        <p>Organize uploads with an integrated 30-day schedule planner. Directly initiate generations matching daily content milestones.</p>
-      </div>
+      <article class="bento-card span-8">
+        <div class="card-glow" style="background:var(--violet-400); bottom:-50px; left:30%;"></div>
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>
+        </div>
+        <h3>Character consistency</h3>
+        <p>Lock visual attributes once — they propagate across every scene prompt so your protagonist doesn't morph mid-video.</p>
+        <span class="card-tag">Prompt injection</span>
+      </article>
 
-      <!-- Feature 6 -->
-      <div class="feature-card">
-        <div class="feature-icon">📜</div>
-        <h3>Generation History</h3>
-        <p>All previously generated stories, prompts, voice overs, thumbnails, and final video downloads are securely saved to your account database.</p>
-      </div>
+      <article class="bento-card span-6">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h3>Content planning</h3>
+        <p>30-day schedule planner with one-click generation per milestone.</p>
+      </article>
 
+      <article class="bento-card span-6">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <h3>Generation history</h3>
+        <p>Stories, voiceovers, thumbnails, and final exports — all persisted to your account.</p>
+      </article>
     </div>
   </section>
 
-  <!-- Footer -->
+  <section class="cta-band" id="cta">
+    <h2>Your next video is one prompt away</h2>
+    <p>Open the studio. No plugins, no export gymnastics.</p>
+    <button class="btn btn-glow btn-lg" onclick="openAuthModal('signup')">Enter VibeForge</button>
+  </section>
+
   <footer>
-    <p>&copy; 2026 VibeForge. All rights reserved.</p>
+    <p>&copy; 2026 <span>VibeForge</span>. Crafted for creators who move fast.</p>
   </footer>
 
-  <!-- Auth Modal -->
   <div class="modal-overlay" id="auth-modal" onclick="closeAuthModalOnOverlay(event)">
     <div class="auth-card">
-      <button class="close-modal" onclick="closeAuthModal()">&times;</button>
+      <button class="close-modal" onclick="closeAuthModal()" aria-label="Close">&times;</button>
       <div class="auth-tabs">
         <div class="auth-tab active" id="tab-login" onclick="setAuthTab('login')">Log In</div>
         <div class="auth-tab" id="tab-signup" onclick="setAuthTab('signup')">Sign Up</div>
       </div>
-      
       <div class="auth-error" id="auth-error"></div>
       <div class="auth-success" id="auth-success"></div>
-
       <form id="auth-form" onsubmit="handleAuthSubmit(event)">
         <div class="form-group">
-          <label for="auth-email">Email Address</label>
+          <label for="auth-email">Email</label>
           <input type="email" id="auth-email" class="form-input" placeholder="you@domain.com" required autocomplete="username">
         </div>
         <div class="form-group" style="margin-bottom: 24px;">
@@ -576,28 +1329,100 @@
 
   <script>
     let supabaseClient = null;
-    let currentTab = 'login'; // 'login' or 'signup'
+    let currentTab = 'login';
 
+    /* ── Scroll reveal ── */
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          if (e.target.classList.contains('reveal')) e.target.style.opacity = '1';
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.flow-node, .bento-card, .cta-band').forEach((el) => revealObserver.observe(el));
+    document.querySelectorAll('.reveal').forEach((el) => {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1)';
+      revealObserver.observe(el);
+    });
+
+    /* ── Header on scroll ── */
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    /* ── Cursor spotlight ── */
+    const spotlight = document.getElementById('spotlight');
+    let spotX = 0, spotY = 0, curX = 0, curY = 0;
+    document.addEventListener('mousemove', (e) => {
+      spotX = e.clientX;
+      spotY = e.clientY;
+    });
+    function animateSpotlight() {
+      curX += (spotX - curX) * 0.08;
+      curY += (spotY - curY) * 0.08;
+      spotlight.style.left = curX + 'px';
+      spotlight.style.top = curY + 'px';
+      requestAnimationFrame(animateSpotlight);
+    }
+    animateSpotlight();
+
+    /* ── Stat counters ── */
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        const el = e.target;
+        const target = parseInt(el.dataset.count, 10);
+        const suffix = el.textContent.includes(':') ? '' : (target === 9 ? ':16' : (target === 1 ? '' : '%'));
+        const isRatio = target === 9;
+        let start = 0;
+        const duration = 1400;
+        const startTime = performance.now();
+        function tick(now) {
+          const p = Math.min((now - startTime) / duration, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          const val = Math.round(eased * target);
+          el.textContent = isRatio ? val + ':16' : (target === 1 && p >= 1 ? '1' : val + (target === 80 ? '%' : ''));
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+        statObserver.unobserve(el);
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count]').forEach((el) => statObserver.observe(el));
+
+    /* ── Preview pipeline cycle ── */
+    (function cyclePipeline() {
+      const steps = document.querySelectorAll('#preview-pipeline .pipeline-step');
+      let active = 2;
+      setInterval(() => {
+        steps.forEach((s, i) => {
+          s.classList.remove('active', 'done');
+          if (i < active) s.classList.add('done');
+          else if (i === active) s.classList.add('active');
+        });
+        active = (active + 1) % steps.length;
+      }, 2800);
+    })();
+
+    /* ── Supabase auth (unchanged logic) ── */
     async function initSupabase() {
       try {
         const configRes = await fetch('/api/config');
-        if (!configRes.ok) throw new Error("Failed to load config");
+        if (!configRes.ok) throw new Error('Failed to load config');
         const config = await configRes.json();
-        
         if (config.supabaseUrl && config.supabaseKey) {
           supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseKey);
-          
-          // Verify session state
           const { data: { session } } = await supabaseClient.auth.getSession();
-          if (session) {
-            // Redirect immediately to studio dashboard if user is authenticated
-            window.location.href = '/studio';
-          }
+          if (session) window.location.href = '/studio';
         } else {
-          console.warn("Supabase configuration not detected on server.");
+          console.warn('Supabase configuration not detected on server.');
         }
       } catch (err) {
-        console.error("Auth Supabase Init Error:", err);
+        console.error('Auth Supabase Init Error:', err);
       }
     }
 
@@ -612,9 +1437,7 @@
     }
 
     function closeAuthModalOnOverlay(event) {
-      if (event.target.id === 'auth-modal') {
-        closeAuthModal();
-      }
+      if (event.target.id === 'auth-modal') closeAuthModal();
     }
 
     function clearMessages() {
@@ -625,11 +1448,9 @@
     function setAuthTab(tab) {
       currentTab = tab;
       clearMessages();
-      
       const tabLogin = document.getElementById('tab-login');
       const tabSignup = document.getElementById('tab-signup');
       const submitBtn = document.getElementById('auth-submit-btn');
-      
       if (tab === 'login') {
         tabLogin.classList.add('active');
         tabSignup.classList.remove('active');
@@ -644,51 +1465,41 @@
     async function handleAuthSubmit(event) {
       event.preventDefault();
       clearMessages();
-      
       const email = document.getElementById('auth-email').value;
       const password = document.getElementById('auth-password').value;
       const errorDiv = document.getElementById('auth-error');
       const successDiv = document.getElementById('auth-success');
       const submitBtn = document.getElementById('auth-submit-btn');
-      
       if (!supabaseClient) {
-        errorDiv.textContent = "Supabase configuration is missing. Cannot authenticate.";
+        errorDiv.textContent = 'Supabase configuration is missing. Cannot authenticate.';
         errorDiv.style.display = 'block';
         return;
       }
-      
       submitBtn.disabled = true;
       submitBtn.textContent = currentTab === 'login' ? 'Logging in...' : 'Registering...';
-      
       try {
         if (currentTab === 'login') {
-          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
           if (error) throw error;
-          
-          successDiv.textContent = "Success! Redirecting to studio dashboard...";
+          successDiv.textContent = 'Success! Redirecting to studio...';
           successDiv.style.display = 'block';
-          setTimeout(() => {
-            window.location.href = '/studio';
-          }, 1000);
+          setTimeout(() => { window.location.href = '/studio'; }, 1000);
         } else {
           const { data, error } = await supabaseClient.auth.signUp({ email, password });
           if (error) throw error;
-          
           if (data.session) {
-            successDiv.textContent = "Account created successfully! Redirecting to studio dashboard...";
+            successDiv.textContent = 'Account created! Redirecting...';
             successDiv.style.display = 'block';
-            setTimeout(() => {
-              window.location.href = '/studio';
-            }, 1000);
+            setTimeout(() => { window.location.href = '/studio'; }, 1000);
           } else {
-            successDiv.textContent = "Account created! Please check your email to confirm registration before logging in.";
+            successDiv.textContent = 'Check your email to confirm, then log in.';
             successDiv.style.display = 'block';
             submitBtn.disabled = false;
             submitBtn.textContent = 'Create Account';
           }
         }
       } catch (err) {
-        errorDiv.textContent = err.message || "An authentication error occurred.";
+        errorDiv.textContent = err.message || 'Authentication failed.';
         errorDiv.style.display = 'block';
         submitBtn.disabled = false;
         submitBtn.textContent = currentTab === 'login' ? 'Log In' : 'Create Account';
