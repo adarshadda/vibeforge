@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeForge Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #0a0b0f;
+  --bg2: #111318;
+  --bg3: #181b22;
+  --bg4: #1e222c;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --text2: #9197a8;
+  --text3: #5a6070;
+  --accent: #7c6fff;
+  --accent2: #a99fff;
+  --green: #2dd4a0;
+  --green-bg: rgba(45,212,160,0.08);
+  --red: #ff6b6b;
+  --red-bg: rgba(255,107,107,0.08);
+  --yellow: #ffd166;
+  --yellow-bg: rgba(255,209,102,0.08);
+  --blue: #60b4ff;
+  --blue-bg: rgba(96,180,255,0.08);
+  --pink: #ff7eb3;
+  --orange: #ff9f5a;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; display: flex; overflow: hidden; }
+
+/* ── Sidebar ─────────────────────── */
+.sidebar { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: fixed; left: 0; top: 0; }
+.logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+.logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--pink)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
+.logo-name { font-size: 14px; font-weight: 700; letter-spacing: -.3px; }
+.logo-sub { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: var(--mono); }
+.nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+.nav-section { font-size: 10px; font-weight: 600; letter-spacing: .1em; color: var(--text3); padding: 12px 10px 6px; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; transition: all .15s; margin-bottom: 2px; border: 1px solid transparent; }
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+.nav-item .icon { width: 16px; height: 16px; opacity: .7; font-size: 14px; }
+.nav-item.active .icon { opacity: 1; }
+.status-bar { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+.status-dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.status-text { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+/* ── Main ────────────────────────── */
+.main { margin-left: 220px; flex: 1; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
+.topbar { padding: 16px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+.page-title { font-size: 16px; font-weight: 600; }
+.page-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.content { padding: 24px 28px; flex: 1; }
+
+/* ── Cards ───────────────────────── */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-title { font-size: 13px; font-weight: 600; letter-spacing: -.2px; }
+.card-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ── Buttons ─────────────────────── */
+.btn { padding: 8px 16px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); transition: all .15s; font-family: var(--sans); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn:hover { background: var(--bg4); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { background: #6a5fff; }
+.btn.green { background: var(--green-bg); border-color: rgba(45,212,160,.3); color: var(--green); }
+.btn.green:hover { background: rgba(45,212,160,.15); }
+.btn.small { padding: 5px 10px; font-size: 11px; }
+.btn.danger { background: var(--red-bg); border-color: rgba(255,107,107,.3); color: var(--red); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── Tags/Chips ──────────────────── */
+.tag-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.genre-tag { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; transition: all .15s; }
+.genre-tag.active { border-color: var(--accent); background: rgba(124,111,255,.12); color: var(--accent2); }
+.char-chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; transition: all .15s; }
+.char-chip.active { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+.char-avatar { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+/* ── Pipeline ────────────────────── */
+.pipeline { display: flex; flex-direction: column; gap: 0; }
+.pipe-step { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); transition: all .15s; }
+.pipe-step:last-child { border-bottom: none; }
+.pipe-left { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.pipe-num { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: var(--mono); border: 1px solid var(--border2); background: var(--bg3); color: var(--text3); flex-shrink: 0; transition: all .3s; }
+.pipe-num.active { border-color: var(--accent); background: rgba(124,111,255,.15); color: var(--accent2); animation: pulse 1.2s ease-in-out infinite; }
+.pipe-num.done { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+.pipe-num.error { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+.pipe-num.skipped { border-color: var(--border); background: var(--bg4); color: var(--text3); opacity: .5; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(124,111,255,.4); } 50% { box-shadow: 0 0 0 5px rgba(124,111,255,0); } }
+.pipe-line { width: 1px; flex: 1; background: var(--border); min-height: 16px; margin-top: 3px; }
+.pipe-body { flex: 1; padding-bottom: 4px; }
+.pipe-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.pipe-desc { font-size: 11px; color: var(--text3); line-height: 1.6; }
+.pipe-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.pill { font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 4px; background: var(--bg4); border: 1px solid var(--border); color: var(--text3); }
+.pill.live { border-color: rgba(45,212,160,.3); color: var(--green); background: var(--green-bg); }
+.pill.warn { border-color: rgba(255,209,102,.3); color: var(--yellow); background: var(--yellow-bg); }
+.pipe-progress { margin-top: 8px; }
+.progress-bar { height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; background: var(--accent); width: 0%; transition: width .4s ease; }
+.pipe-log { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 5px; min-height: 14px; }
+
+/* ── Output ──────────────────────── */
+.output-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-top: 16px; display: none; }
+.output-panel.visible { display: block; }
+.output-section { margin-bottom: 14px; }
+.output-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; color: var(--text3); text-transform: uppercase; margin-bottom: 6px; }
+.output-text { font-size: 13px; color: var(--text); line-height: 1.7; }
+.output-mono { font-family: var(--mono); font-size: 11px; color: var(--accent2); background: var(--bg); padding: 10px 12px; border-radius: 7px; border: 1px solid var(--border); line-height: 1.8; white-space: pre-wrap; }
+.scene-prompt { padding: 6px 0; border-bottom: 1px solid var(--border); color: var(--text2); font-size: 12px; line-height: 1.6; }
+.scene-prompt:last-child { border-bottom: none; }
+.scene-num { color: var(--accent2); margin-right: 8px; font-weight: 700; }
+.thumb-preview { width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; margin-top: 8px; }
+.audio-player { width: 100%; margin-top: 8px; height: 36px; }
+audio { width: 100%; outline: none; }
+
+/* ── Layouts ─────────────────────── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.metric { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+.metric-val { font-size: 24px; font-weight: 700; }
+.metric-label { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ── API Keys ────────────────────── */
+.api-row { display: grid; grid-template-columns: 140px 1fr auto; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.api-row:last-child { border-bottom: none; }
+.api-label { font-size: 12px; font-weight: 500; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.api-badge { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.api-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; font-family: var(--mono); font-size: 11px; color: var(--text); outline: none; width: 100%; transition: border .15s; letter-spacing: .02em; }
+.api-input:focus { border-color: var(--accent); }
+.api-input::placeholder { color: var(--text3); }
+.api-input.saved { border-color: rgba(45,212,160,0.4); }
+.api-status { font-size: 10px; font-family: var(--mono); white-space: nowrap; }
+.api-status.ok { color: var(--green); }
+.api-status.missing { color: var(--text3); }
+.api-status.checking { color: var(--yellow); }
+.api-status.invalid { color: var(--red); }
+
+/* ── Schedule ────────────────────── */
+.schedule-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.sched-header { text-align: center; font-size: 10px; color: var(--text3); font-weight: 600; padding: 4px 0; }
+.sched-day { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 8px 4px; text-align: center; cursor: pointer; transition: all .15s; }
+.sched-day:hover { border-color: var(--border2); background: var(--bg4); }
+.sched-day.today { border-color: var(--accent); }
+.sched-d { font-size: 13px; font-weight: 600; }
+.sched-label { font-size: 8px; color: var(--text3); margin-top: 2px; line-height: 1.3; }
+.sched-dot { width: 5px; height: 5px; border-radius: 50%; margin: 4px auto 0; }
+
+/* ── Logs ────────────────────────── */
+.log-area { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: var(--mono); font-size: 11px; max-height: 160px; overflow-y: auto; line-height: 1.8; }
+.log-line { display: flex; gap: 10px; }
+.log-time { color: var(--text3); flex-shrink: 0; }
+.log-ok { color: var(--green); }
+.log-info { color: var(--blue); }
+.log-warn { color: var(--yellow); }
+.log-err { color: var(--red); }
+
+/* ── Misc ────────────────────────── */
+.toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.toggle-track { width: 34px; height: 18px; border-radius: 9px; background: var(--bg4); border: 1px solid var(--border2); position: relative; transition: background .2s; }
+.toggle-track.on { background: rgba(45,212,160,.25); border-color: rgba(45,212,160,.5); }
+.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--text3); transition: all .2s; }
+.toggle-track.on .toggle-thumb { left: 18px; background: var(--green); }
+.toggle-label { font-size: 12px; color: var(--text2); }
+.panel { display: none; }
+.panel.active { display: block; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.notif { position: fixed; bottom: 20px; right: 20px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 16px; font-size: 12px; display: flex; align-items: center; gap: 8px; transform: translateY(60px); opacity: 0; transition: all .3s; z-index: 1000; max-width: 320px; }
+.notif.show { transform: translateY(0); opacity: 1; }
+.notif.success { border-color: rgba(45,212,160,.4); }
+.notif.error { border-color: rgba(255,107,107,.4); }
+select { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; font-size: 12px; color: var(--text); font-family: var(--sans); outline: none; cursor: pointer; width: 100%; }
+select:focus { border-color: var(--accent); }
+textarea { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; font-size: 12px; color: var(--text); font-family: var(--sans); outline: none; resize: vertical; width: 100%; line-height: 1.6; }
+textarea:focus { border-color: var(--accent); }
+input[type=text] { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; font-size: 12px; color: var(--text); font-family: var(--sans); outline: none; width: 100%; }
+input[type=text]:focus { border-color: var(--accent); }
+
+/* ── Health indicator pills ─────── */
+.svc-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.svc-pill { font-size: 11px; font-family: var(--mono); padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); display: flex; align-items: center; gap: 5px; }
+.svc-pill.ok    { border-color: rgba(45,212,160,.3);   color: var(--green); background: var(--green-bg); }
+.svc-pill.missing { border-color: rgba(90,96,112,.3); color: var(--text3); background: var(--bg3); }
+.svc-pill.invalid { border-color: rgba(255,107,107,.3); color: var(--red);   background: var(--red-bg); }
+.svc-pill.checking { border-color: rgba(255,209,102,.3); color: var(--yellow); background: var(--yellow-bg); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-name" style="font-size: 18px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">VibeForge</div>
+    <div class="logo-sub" style="font-size: 9px; line-height: 1.3; color: var(--text3); margin-top: 4px; text-transform: uppercase;">“Content before coffee”</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Studio</div>
+    <div class="nav-item active" onclick="showPage('generator', this)"><span class="icon">✨</span> Generator</div>
+    <div class="nav-item" onclick="showPage('history', this)"><span class="icon">📜</span> History</div>
+    <div class="nav-item" onclick="showPage('pipeline', this)"><span class="icon">⚡</span> Pipeline</div>
+    <div class="nav-item" onclick="showPage('schedule', this)"><span class="icon">📅</span> Content Plan</div>
+    <div class="nav-section">Config</div>
+    <div class="nav-item" onclick="showPage('apikeys', this)"><span class="icon">🔑</span> API Keys</div>
+    <div class="nav-item" onclick="showPage('characters', this)"><span class="icon">🧸</span> Characters</div>
+    <div class="nav-item" onclick="showPage('settings', this)"><span class="icon">⚙️</span> Settings</div>
+    <div class="nav-section">Logs</div>
+    <div class="nav-item" onclick="showPage('logs', this)"><span class="icon">📋</span> Activity Log</div>
+  </nav>
+  <div class="status-bar" style="flex-direction: column; align-items: flex-start; gap: 10px; border-top: 1px solid var(--border); padding: 16px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div class="status-dot yellow" id="global-status-dot"></div>
+      <div class="status-text" id="global-status-text">checking...</div>
+    </div>
+    <div id="user-profile-section" style="width: 100%; display: none; border-top: 1px solid var(--border); padding-top: 10px;">
+      <div style="font-size: 10px; color: var(--text3); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 2px;">Account</div>
+      <div style="font-size: 11px; color: var(--text2); word-break: break-all;" id="user-email">...</div>
+      <button class="btn danger small" onclick="signOutUser()" style="width: 100%; margin-top: 8px; justify-content: center;">🚪 Log Out</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ===== GENERATOR PAGE ===== -->
+  <div id="page-generator" class="panel active">
+    <div class="topbar">
+      <div><div class="page-title">Video Generator</div><div class="page-sub">Create a complete 30-second kids short end-to-end</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="randomize()">🎲 Randomize</button>
+        <button class="btn primary" onclick="startGeneration()" id="gen-btn">✨ Generate Video</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-header"><div><div class="card-title">Genre</div><div class="card-sub">Pick one theme</div></div></div>
+            <div class="tag-grid" id="genre-grid">
+              <span class="genre-tag active" onclick="selectGenre(this)">🌈 Sharing & Kindness</span>
+              <span class="genre-tag" onclick="selectGenre(this)">🦁 Animal Adventures</span>
+              <span class="genre-tag" onclick="selectGenre(this)">🚀 Space Explorers</span>
+              <span class="genre-tag" onclick="selectGenre(this)">🍕 Food Funland</span>
+              <span class="genre-tag" onclick="selectGenre(this)">🌊 Ocean Friends</span>
+              <span class="genre-tag" onclick="selectGenre(this)">🏰 Fairy Tale Magic</span>
+              <span class="genre-tag" onclick="selectGenre(this)">🦸 Superheroes</span>
+              <span class="genre-tag" onclick="selectGenre(this)">🌿 Nature & Science</span>
+              <span class="genre-tag" onclick="selectGenre(this)">🎵 Music & Dance</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div><div class="card-title">Characters</div><div class="card-sub">Select 2–3</div></div></div>
+            <div class="tag-grid" id="char-grid">
+              <span class="char-chip active" onclick="toggleChar(this)" data-char="Mia"><span class="char-avatar" style="background:#3a2f1a">🧒</span>Mia</span>
+              <span class="char-chip active" onclick="toggleChar(this)" data-char="Coco"><span class="char-avatar" style="background:#1a2e25">🐵</span>Coco</span>
+              <span class="char-chip" onclick="toggleChar(this)" data-char="Bruno"><span class="char-avatar" style="background:#251a35">🐻</span>Bruno</span>
+              <span class="char-chip" onclick="toggleChar(this)" data-char="Felix"><span class="char-avatar" style="background:#2e1a1a">🦊</span>Felix</span>
+              <span class="char-chip" onclick="toggleChar(this)" data-char="Pip"><span class="char-avatar" style="background:#1a2e1a">🐸</span>Pip</span>
+              <span class="char-chip" onclick="toggleChar(this)" data-char="Robo"><span class="char-avatar" style="background:#1a2535">🤖</span>Robo</span>
+              <span class="char-chip active" onclick="toggleChar(this)" data-char="Zara"><span class="char-avatar" style="background:#2e1a28">👧</span>Zara</span>
+              <span class="char-chip" onclick="toggleChar(this)" data-char="Luna"><span class="char-avatar" style="background:#25202e">🦄</span>Luna</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div><div class="card-title">Moral / Lesson</div><div class="card-sub">The takeaway for kids</div></div></div>
+            <select id="moral-select">
+              <option value="auto">✨ Auto-generate a lesson</option>
+              <option>Sharing makes everyone happy</option>
+              <option>Kindness always comes back to you</option>
+              <option>Teamwork makes the dream work</option>
+              <option>It's okay to make mistakes</option>
+              <option>Trying new things is brave</option>
+              <option>Always tell the truth</option>
+              <option>Helping others feels wonderful</option>
+              <option>Every friend is special</option>
+            </select>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div><div class="card-title">Pipeline Options</div><div class="card-sub">Choose which steps to run</div></div></div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="toggle" onclick="toggleSwitch('run-voice')">
+                <div class="toggle-track on" id="toggle-run-voice"><div class="toggle-thumb"></div></div>
+                <span class="toggle-label">Generate voiceover (ElevenLabs)</span>
+              </div>
+              <div class="toggle" onclick="toggleSwitch('run-video')">
+                <div class="toggle-track on" id="toggle-run-video"><div class="toggle-thumb"></div></div>
+                <span class="toggle-label">Generate video clips (Runway)</span>
+              </div>
+              <div class="toggle" onclick="toggleSwitch('run-thumb')">
+                <div class="toggle-track on" id="toggle-run-thumb"><div class="toggle-thumb"></div></div>
+                <span class="toggle-label">Generate thumbnail (DALL-E 3)</span>
+              </div>
+              <div class="toggle" onclick="toggleSwitch('run-assemble')">
+                <div class="toggle-track" id="toggle-run-assemble"><div class="toggle-thumb"></div></div>
+                <span class="toggle-label">Assemble final video (Creatomate)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" id="pipeline-card">
+            <div class="card-header">
+              <div><div class="card-title">Generation Pipeline</div><div class="card-sub">Live status of each step</div></div>
+              <span id="pipeline-badge" style="font-size:10px;font-family:var(--mono);color:var(--text3);background:var(--bg4);padding:3px 8px;border-radius:4px">idle</span>
+            </div>
+            <div class="pipeline" id="pipeline-steps"></div>
+          </div>
+
+          <div class="output-panel" id="output-panel">
+            <div class="output-section">
+              <div class="output-label">Video Title</div>
+              <div class="output-text" id="op-title" style="font-size:15px;font-weight:600"></div>
+            </div>
+            <div class="output-section">
+              <div class="output-label">Story Arc</div>
+              <div class="output-text" id="op-story"></div>
+            </div>
+            <div id="op-voice-section" class="output-section" style="display:none">
+              <div class="output-label">Voiceover — playable</div>
+              <audio id="op-audio" controls class="audio-player"></audio>
+              <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.7" id="op-voice-text"></div>
+            </div>
+            <div id="op-thumb-section" class="output-section" style="display:none">
+              <div class="output-label">Thumbnail — AI generated</div>
+              <img id="op-thumb-img" class="thumb-preview" alt="thumbnail">
+            </div>
+            <div id="op-video-section" class="output-section" style="display:none">
+              <div class="output-label">Final Video — download ready</div>
+              <a id="op-video-link" class="btn green small" target="_blank" style="margin-top:4px">⬇ Download MP4</a>
+            </div>
+            <div class="output-section">
+              <div class="output-label">Scene Prompts → Runway AI</div>
+              <div class="output-mono" id="op-prompts"></div>
+            </div>
+            <div class="output-section">
+              <div class="output-label">YouTube Tags</div>
+              <div id="op-tags" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+            </div>
+            <div class="output-section">
+              <div class="output-label">YouTube Description</div>
+              <div class="output-text" id="op-description" style="font-size:12px;color:var(--text2)"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
+              <button class="btn green small" onclick="copyAllPrompts()">📋 Copy Scene Prompts</button>
+              <button class="btn small" onclick="copyDescription()">📄 Copy YT Description</button>
+              <button class="btn small" onclick="saveToLog()">💾 Save to Log</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== API KEYS PAGE ===== -->
+  <div id="page-apikeys" class="panel">
+    <div class="topbar">
+      <div><div class="page-title">API Keys</div><div class="page-sub">Keys are saved locally in your browser — never sent to any third party</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="testAllKeys()">🔍 Test All Keys</button>
+        <button class="btn" onclick="clearAllKeys()">🗑 Clear All</button>
+        <button class="btn primary" onclick="saveAllKeys()">💾 Save All Keys</button>
+      </div>
+    </div>
+    <div class="content">
+      <div id="svc-health-row" class="svc-grid"></div>
+
+      <div class="three-col" style="margin-bottom:16px">
+        <div class="metric"><div class="metric-val" id="keys-saved" style="color:var(--green)">0</div><div class="metric-label">Keys saved</div></div>
+        <div class="metric"><div class="metric-val" id="keys-missing" style="color:var(--yellow)">6</div><div class="metric-label">Keys missing</div></div>
+        <div class="metric"><div class="metric-val" style="color:var(--text)">~$1–3</div><div class="metric-label">Est. cost/video</div></div>
+      </div>
+
+      <div class="card"><div class="card-header"><div><div class="card-title">Story & Intelligence</div><div class="card-sub">Required — used every generation</div></div></div><div id="key-area-story"></div></div>
+      <div class="card"><div class="card-header"><div><div class="card-title">Video Generation</div><div class="card-sub">Required for video clips</div></div></div><div id="key-area-video"></div></div>
+      <div class="card"><div class="card-header"><div><div class="card-title">Audio & Voice</div></div></div><div id="key-area-audio"></div></div>
+      <div class="card"><div class="card-header"><div><div class="card-title">Thumbnail & Assembly</div></div></div><div id="key-area-assembly"></div></div>
+    </div>
+  </div>
+
+  <!-- ===== CHARACTERS PAGE ===== -->
+  <div id="page-characters" class="panel">
+    <div class="topbar">
+      <div><div class="page-title">Character Config</div><div class="page-sub">Visual prompts injected into every scene</div></div>
+      <button class="btn primary" onclick="saveCharacters()">💾 Save Characters</button>
+    </div>
+    <div class="content"><div class="two-col" id="char-config-grid"></div></div>
+  </div>
+
+  <!-- ===== SCHEDULE PAGE ===== -->
+  <div id="page-schedule" class="panel">
+    <div class="topbar">
+      <div><div class="page-title">30-Day Content Schedule</div><div class="page-sub">Click a day to see the plan</div></div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="schedule-grid">
+          <div class="sched-header">Mon</div><div class="sched-header">Tue</div><div class="sched-header">Wed</div>
+          <div class="sched-header">Thu</div><div class="sched-header">Fri</div><div class="sched-header">Sat</div><div class="sched-header">Sun</div>
+        </div>
+        <div class="schedule-grid" id="sched-grid" style="margin-top:4px"></div>
+      </div>
+      <div class="card" id="sched-detail" style="display:none">
+        <div class="card-header">
+          <div><div class="card-title" id="sched-detail-title">Day 1</div><div class="card-sub" id="sched-detail-sub"></div></div>
+          <button class="btn primary small" onclick="genFromSchedule()">⚡ Generate This Day</button>
+        </div>
+        <div id="sched-detail-body" style="font-size:13px;color:var(--text2);line-height:1.7"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PIPELINE PAGE ===== -->
+  <div id="page-pipeline" class="panel">
+    <div class="topbar"><div><div class="page-title">Automation Pipeline</div><div class="page-sub">Full prompt → YouTube flow</div></div></div>
+    <div class="content">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">Full pipeline overview</div>
+          <div class="pipeline">
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-num done">1</div><div class="pipe-line"></div></div><div class="pipe-body"><div class="pipe-title">Story Generation</div><div class="pipe-desc">Claude API → story arc, 6 scene prompts, voiceover script, title, tags, description</div><div class="pipe-pills"><span class="pill live">Claude API</span><span class="pill">~2s</span><span class="pill">$0.001</span></div></div></div>
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-num done">2</div><div class="pipe-line"></div></div><div class="pipe-body"><div class="pipe-title">Voiceover</div><div class="pipe-desc">ElevenLabs TTS → MP3 with child narrator voice, 30 seconds, playable in browser</div><div class="pipe-pills"><span class="pill live">ElevenLabs</span><span class="pill">~5s</span><span class="pill">$0.02</span></div></div></div>
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-num done">3</div><div class="pipe-line"></div></div><div class="pipe-body"><div class="pipe-title">AI Thumbnail</div><div class="pipe-desc">DALL-E 3 → 1024×1792 vibrant character thumbnail, viewable instantly</div><div class="pipe-pills"><span class="pill live">DALL-E 3</span><span class="pill">~12s</span><span class="pill">$0.04</span></div></div></div>
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-num">4</div><div class="pipe-line"></div></div><div class="pipe-body"><div class="pipe-title">Video Clips (×6 scenes)</div><div class="pipe-desc">Runway Gen-3 Turbo → 6 × 5-second clips, parallel generation, 1080×1920</div><div class="pipe-pills"><span class="pill">Runway Gen-3</span><span class="pill">~15 min</span><span class="pill">$0.48</span></div></div></div>
+            <div class="pipe-step"><div class="pipe-left"><div class="pipe-num">5</div></div><div class="pipe-body"><div class="pipe-title">Video Assembly</div><div class="pipe-desc">Creatomate → stitches 6 clips + voiceover + end card → final 1080×1920 MP4</div><div class="pipe-pills"><span class="pill">Creatomate</span><span class="pill">~3 min</span><span class="pill">$0.50</span></div></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">Cost breakdown per video</div>
+            <div style="font-size:12px;color:var(--text2);line-height:2.2">
+              <div style="display:flex;justify-content:space-between"><span>Claude (story)</span><span style="font-family:var(--mono);color:var(--green)">$0.001</span></div>
+              <div style="display:flex;justify-content:space-between"><span>ElevenLabs (voice)</span><span style="font-family:var(--mono)">$0.02</span></div>
+              <div style="display:flex;justify-content:space-between"><span>DALL-E 3 (thumbnail)</span><span style="font-family:var(--mono)">$0.04</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Runway (6 clips)</span><span style="font-family:var(--mono)">$0.48</span></div>
+              <div style="display:flex;justify-content:space-between"><span>Creatomate (assembly)</span><span style="font-family:var(--mono)">$0.50</span></div>
+              <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:4px;font-weight:600"><span>Total</span><span style="color:var(--green);font-family:var(--mono)">~$1.04–3</span></div>
+              <div style="display:flex;justify-content:space-between;margin-top:2px"><span style="color:var(--text3)">30 videos/month</span><span style="color:var(--text3);font-family:var(--mono)">~$30–90</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:12px">API Status</div>
+            <div id="pipeline-svc-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS PAGE ===== -->
+  <div id="page-settings" class="panel">
+    <div class="topbar"><div><div class="page-title">Settings</div><div class="page-sub">Global configuration</div></div><button class="btn primary" onclick="saveSettings()">💾 Save Settings</button></div>
+    <div class="content">
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px">Video Settings</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div><div style="font-size:11px;color:var(--text3);margin-bottom:5px">Video style</div>
+                <select id="setting-style"><option value="3D Pixar cartoon">3D Pixar cartoon (recommended)</option><option value="2D flat cartoon">2D flat cartoon</option><option value="anime style">Anime style</option><option value="watercolor storybook">Watercolor storybook</option></select></div>
+              <div><div style="font-size:11px;color:var(--text3);margin-bottom:5px">Voice preset</div>
+                <select id="setting-voice"><option value="cheerful-child">Cheerful child narrator</option><option value="warm-storyteller">Warm storyteller</option><option value="energetic-host">Energetic host</option></select></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px">Backend URL</div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:5px">API server (change if not running on localhost)</div>
+            <input type="text" id="setting-backend" value="http://localhost:3000" placeholder="http://localhost:3000">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOGS PAGE ===== -->
+  <div id="page-logs" class="panel">
+    <div class="topbar"><div><div class="page-title">Activity Log</div><div class="page-sub">All pipeline events and API calls</div></div><button class="btn small danger" onclick="clearLogs()">🗑 Clear</button></div>
+    <div class="content"><div class="card"><div class="log-area" id="main-log-area" style="max-height:600px"></div></div></div>
+  </div>
+
+  <!-- ===== HISTORY PAGE ===== -->
+  <div id="page-history" class="panel">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Generation History</div>
+        <div class="page-sub">View and download your previously generated stories & videos</div>
+      </div>
+      <button class="btn" onclick="loadHistory()">🔄 Refresh History</button>
+    </div>
+    <div class="content">
+      <div id="history-loading" style="color:var(--text3);font-size:13px;text-align:center;padding:40px;">Loading history...</div>
+      <div id="history-empty" style="display:none;color:var(--text3);font-size:13px;text-align:center;padding:40px;">No video history found. Generate your first video to see it here!</div>
+      <div id="history-db-error" style="display:none;color:var(--yellow);background:var(--yellow-bg);border:1px solid rgba(255,209,102,.3);border-radius:10px;padding:16px;margin-bottom:20px;font-size:12px;line-height:1.6;">
+        ⚠️ <strong>Database table not initialized.</strong><br>
+        To enable history, please create the <code>generations</code> table in your Supabase SQL Editor.
+      </div>
+      <div class="three-col" id="history-grid" style="display:none"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Notification -->
+<div class="notif" id="notif"><span id="notif-icon">✅</span><span id="notif-text"></span></div>
+
+<script>
+let supabaseClient = null;
+
+// ── Generation Local Trackers ──
+let finalVoiceUrl = "";
+let finalThumbUrl = "";
+let finalVideoUrl = "";
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+const state = {
+  keys: {},
+  selectedGenre: '🌈 Sharing & Kindness',
+  selectedChars: ['Mia','Coco','Zara'],
+  generating: false,
+  logs: [],
+  lastStory: null,
+  lastAudioBlob: null,
+  settings: {
+    style: '3D Pixar cartoon',
+    voice: 'cheerful-child',
+    backend: 'http://localhost:3000'
+  }
+};
+
+const KEY_DEFS = {
+  story:    [
+    { id:'anthropic', label:'Anthropic (Claude)', color:'#7c6fff', placeholder:'sk-ant-api03-...' },
+    { id:'gemini', label:'Google Gemini', color:'#60b4ff', placeholder:'AIzaSy...' }
+  ],
+  video:    [{ id:'runway', label:'Runway Gen-3', color:'var(--orange)', placeholder:'key_...' }],
+  audio:    [{ id:'elevenlabs', label:'ElevenLabs', color:'var(--green)', placeholder:'sk_...' }],
+  assembly: [
+    { id:'openai', label:'OpenAI (DALL-E 3)', color:'var(--blue)', placeholder:'sk-...' },
+    { id:'creatomate', label:'Creatomate', color:'var(--pink)', placeholder:'...' }
+  ]
+};
+
+const CHARS = {
+  Mia:   { emoji:'🧒', prompt:'3D cartoon girl, dark pigtails, red polka-dot dress, big round eyes, warm skin tone, bright smile, Pixar style' },
+  Coco:  { emoji:'🐵', prompt:'3D cartoon monkey, big brown expressive eyes, yellow banana necklace, playful grin, soft brown fur, Pixar style' },
+  Bruno: { emoji:'🐻', prompt:'3D cartoon bear, round ears, blue striped shirt, gentle expression, warm brown fur, Pixar style' },
+  Felix: { emoji:'🦊', prompt:'3D cartoon fox, orange fur, white chest, clever expression, bushy tail, Pixar style' },
+  Pip:   { emoji:'🐸', prompt:'3D cartoon frog, bright green, big yellow eyes, tiny backpack, cheeky smile, Pixar style' },
+  Robo:  { emoji:'🤖', prompt:'3D cartoon robot, round head, blue LED eyes, small antenna, friendly face display, Pixar style' },
+  Zara:  { emoji:'👧', prompt:'3D cartoon girl, braided hair with stars, purple spacesuit, bright smile, Pixar style, galaxy colors' },
+  Luna:  { emoji:'🦄', prompt:'3D cartoon unicorn, pastel pink mane, sparkly horn, big violet eyes, Pixar style, magical glitter' }
+};
+
+const SCHEDULE = [
+  {d:1,theme:'Setup Day',genre:'Sharing & Kindness',note:'First test run — check all API calls work end to end.',color:'var(--accent)'},
+  {d:2,theme:'Introduce Mia',genre:'Sharing & Kindness',note:'First full video. Upload manually, review quality.',color:'var(--accent)'},
+  {d:3,theme:'Introduce Coco',genre:'Animal Adventures',note:'Second character debut. Animal adventure genre.',color:'var(--accent)'},
+  {d:4,theme:'Introduce Zara',genre:'Space Explorers',note:'Third main character. Space genre, introduce Robo.',color:'var(--accent)'},
+  {d:5,theme:'Food Funland',genre:'Food Funland',note:'Mia + Coco in colorful bakery. High visual appeal.',color:'var(--accent)'},
+  {d:6,theme:'Ocean Friends',genre:'Ocean Friends',note:'Zara meets a mermaid. First underwater scene.',color:'var(--accent)'},
+  {d:7,theme:'Review Week 1',genre:'Best genre',note:'Check analytics: which genre got most views?',color:'var(--accent)'},
+  {d:8,theme:'Series Part 1',genre:'Fairy Tale Magic',note:'"The Lost Rainbow" Pt 1 — Mia finds half a rainbow.',color:'var(--green)'},
+  {d:9,theme:'Series Part 2',genre:'Fairy Tale Magic',note:'"The Lost Rainbow" Pt 2 — Coco finds the other half.',color:'var(--green)'},
+  {d:10,theme:'Series Finale',genre:'Fairy Tale Magic',note:'"The Lost Rainbow" Pt 3 — All friends unite rainbow.',color:'var(--green)'},
+  {d:11,theme:'Superheroes',genre:'Superheroes',note:'Mia becomes Rainbow Girl. Saves playground.',color:'var(--green)'},
+  {d:12,theme:'Music & Dance',genre:'Music & Dance',note:'All 3 characters dance battle.',color:'var(--green)'},
+  {d:13,theme:'Nature Science',genre:'Nature & Science',note:'Zara grows a magic plant. Mix science with fantasy.',color:'var(--green)'},
+  {d:14,theme:'Analytics Day',genre:'Top genre',note:'Review CTR, watch time, subscriber growth.',color:'var(--green)'},
+  {d:15,theme:'Viral Hook',genre:'Animal Adventures',note:'Open with a PROBLEM in first 2 sec.',color:'var(--yellow)'},
+  {d:16,theme:'Emotion Story',genre:'Sharing & Kindness',note:'"Mia Feels Left Out" — relatable feelings.',color:'var(--yellow)'},
+  {d:17,theme:'Countdown Format',genre:'Animal Adventures',note:'"5 Silly Things Coco Did Today" — list format.',color:'var(--yellow)'},
+  {d:18,theme:'Holiday Tie-in',genre:'Seasonal',note:'Check what holiday is coming. Seasonal spike.',color:'var(--yellow)'},
+  {d:19,theme:'Ultra-Colorful',genre:'Any top',note:'Dial up saturation. Rainbow, glitter, sparkles.',color:'var(--yellow)'},
+  {d:20,theme:'Community Post',genre:'Any',note:'Post YouTube Community Poll.',color:'var(--yellow)'},
+  {d:21,theme:'Best-of Remix',genre:'Mixed',note:'Repackage top 3 scenes from best video.',color:'var(--yellow)'},
+  {d:22,theme:'New Series',genre:'Top genre',note:'Start new 3-part series in best genre.',color:'var(--red)'},
+  {d:23,theme:'New Character',genre:'Any',note:'Introduce a new side character.',color:'var(--red)'},
+  {d:24,theme:'Double Down',genre:'Best genre',note:'Post top-performing genre with cliffhanger.',color:'var(--red)'},
+  {d:25,theme:'Cliffhanger Pt 2',genre:'Best genre',note:"Resolve yesterday's cliffhanger. Big ending.",color:'var(--red)'},
+  {d:26,theme:'Collab Style',genre:'Any',note:'Two characters "meet for the first time".',color:'var(--red)'},
+  {d:27,theme:'Meta Video',genre:'Any',note:'"How Mia\'s World Was Made" — behind the magic.',color:'var(--red)'},
+  {d:28,theme:'Thumbnail Test',genre:'Top genre',note:'A/B test 2 thumbnails in YouTube Studio.',color:'var(--red)'},
+  {d:29,theme:'Double Post',genre:'Best genre',note:'Publish TWO videos today — 7 AM and 4 PM.',color:'var(--red)'},
+  {d:30,theme:'Month Wrap',genre:'Review',note:'Export 30-day analytics. Plan Month 2.',color:'var(--red)'}
+];
+
+// ─────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await initSupabase();
+  loadKeys();
+  loadSettings();
+  buildKeyUI();
+  buildPipelineUI();
+  buildCharConfig();
+  buildSchedule();
+  loadLogs();
+  updateKeyMetrics();
+  checkHealth();
+});
+
+function api(path) {
+  const base = document.getElementById('setting-backend')?.value || state.settings.backend || 'http://localhost:3000';
+  return `${base}${path}`;
+}
+
+function getHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (state.keys.anthropic) headers['x-anthropic-key'] = state.keys.anthropic;
+  if (state.keys.gemini) headers['x-gemini-key'] = state.keys.gemini;
+  if (state.keys.runway) headers['x-runway-key'] = state.keys.runway;
+  if (state.keys.elevenlabs) headers['x-elevenlabs-key'] = state.keys.elevenlabs;
+  if (state.keys.openai) headers['x-openai-key'] = state.keys.openai;
+  if (state.keys.creatomate) headers['x-creatomate-key'] = state.keys.creatomate;
+  return headers;
+}
+
+// ─────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────
+function showPage(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  if (id === 'apikeys') checkHealth();
+  if (id === 'pipeline') renderPipelineSvcStatus();
+}
+
+// ─────────────────────────────────────────────────────────────
+// HEALTH CHECK
+// ─────────────────────────────────────────────────────────────
+async function checkHealth() {
+  const dot = document.getElementById('global-status-dot');
+  const txt = document.getElementById('global-status-text');
+  dot.className = 'status-dot yellow';
+  txt.textContent = 'checking...';
+  try {
+    const res = await fetch(api('/api/health'), {
+      headers: getHeaders()
+    });
+    const data = await res.json();
+    const { services, status } = data;
+    renderSvcPills(services);
+    if (status === 'ready') { dot.className = 'status-dot'; txt.textContent = 'pipeline ready'; }
+    else { dot.className = 'status-dot yellow'; txt.textContent = 'some keys missing'; }
+  } catch {
+    dot.className = 'status-dot red'; txt.textContent = 'backend offline';
+    renderSvcPills({});
+  }
+}
+
+function renderSvcPills(services) {
+  const names = { anthropic:'Claude', gemini:'Gemini', elevenlabs:'ElevenLabs', openai:'DALL-E 3', runway:'Runway', creatomate:'Creatomate' };
+  const row = document.getElementById('svc-health-row');
+  if (!row) return;
+  row.innerHTML = Object.entries(names).map(([k, label]) => {
+    const st = services[k] || 'missing';
+    return `<div class="svc-pill ${st}"><span>${st === 'ok' ? '●' : '○'}</span>${label}</div>`;
+  }).join('');
+}
+
+function renderPipelineSvcStatus() {
+  const el = document.getElementById('pipeline-svc-status');
+  if (!el) return;
+  checkHealth();
+  setTimeout(() => {
+    el.innerHTML = document.getElementById('svc-health-row')?.innerHTML || '';
+  }, 1500);
+}
+
+// ─────────────────────────────────────────────────────────────
+// API KEYS
+// ─────────────────────────────────────────────────────────────
+function buildKeyUI() {
+  Object.entries(KEY_DEFS).forEach(([section, defs]) => {
+    const area = document.getElementById('key-area-' + section);
+    if (!area) return;
+    area.innerHTML = defs.map(d => `
+      <div class="api-row">
+        <div class="api-label"><span class="api-badge" style="background:${d.color}"></span>${d.label}</div>
+        <input type="password" class="api-input" id="key-${d.id}" placeholder="${d.placeholder}"
+          value="${state.keys[d.id] || ''}" oninput="onKeyInput('${d.id}', this)" autocomplete="off">
+        <span class="api-status ${state.keys[d.id] ? 'ok' : 'missing'}" id="kstatus-${d.id}">
+          ${state.keys[d.id] ? '● saved' : '○ empty'}
+        </span>
+      </div>`).join('');
+  });
+}
+
+function onKeyInput(id, el) {
+  const val = el.value.trim();
+  const st = document.getElementById('kstatus-' + id);
+  if (val) { el.classList.add('saved'); st.className='api-status ok'; st.textContent='● entered'; }
+  else { el.classList.remove('saved'); st.className='api-status missing'; st.textContent='○ empty'; }
+}
+
+function saveAllKeys() {
+  let saved = 0;
+  Object.values(KEY_DEFS).flat().forEach(d => {
+    const el = document.getElementById('key-' + d.id);
+    if (el && el.value.trim()) {
+      state.keys[d.id] = el.value.trim();
+      localStorage.setItem('ks_key_' + d.id, btoa(el.value.trim()));
+      saved++;
+      const st = document.getElementById('kstatus-' + d.id);
+      if (st) { st.className='api-status ok'; st.textContent='● saved'; }
+    }
+  });
+  updateKeyMetrics();
+  addLog('info', `${saved} API keys saved`);
+  notify(`${saved} keys saved ✓`, 'success');
+  // Push keys to backend via .env is not needed — backend reads its own .env
+  // But we surface a reminder
+  if (saved > 0) notify('Remember: also add keys to backend/.env', 'success');
+}
+
+function loadKeys() {
+  Object.values(KEY_DEFS).flat().forEach(d => {
+    const raw = localStorage.getItem('ks_key_' + d.id);
+    if (raw) { try { state.keys[d.id] = atob(raw); } catch(e){} }
+  });
+}
+
+function clearAllKeys() {
+  if (!confirm('Clear all saved API keys?')) return;
+  Object.values(KEY_DEFS).flat().forEach(d => {
+    localStorage.removeItem('ks_key_' + d.id);
+    delete state.keys[d.id];
+  });
+  buildKeyUI(); updateKeyMetrics();
+  notify('All keys cleared', 'error');
+}
+
+function testAllKeys() {
+  notify('Testing all keys via /api/health...', 'success');
+  checkHealth();
+}
+
+function updateKeyMetrics() {
+  const all = Object.values(KEY_DEFS).flat();
+  const saved = all.filter(d => state.keys[d.id]).length;
+  document.getElementById('keys-saved').textContent = saved;
+  document.getElementById('keys-missing').textContent = all.length - saved;
+}
+
+// ─────────────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────────────
+function loadSettings() {
+  try {
+    const s = localStorage.getItem('ks_settings');
+    if (s) Object.assign(state.settings, JSON.parse(s));
+    const backendEl = document.getElementById('setting-backend');
+    if (backendEl) backendEl.value = state.settings.backend;
+  } catch(e){}
+}
+
+function saveSettings() {
+  state.settings.style   = document.getElementById('setting-style')?.value || state.settings.style;
+  state.settings.voice   = document.getElementById('setting-voice')?.value || state.settings.voice;
+  state.settings.backend = document.getElementById('setting-backend')?.value || state.settings.backend;
+  localStorage.setItem('ks_settings', JSON.stringify(state.settings));
+  notify('Settings saved ✓', 'success');
+  addLog('ok', 'Settings saved');
+}
+
+// ─────────────────────────────────────────────────────────────
+// GENERATOR
+// ─────────────────────────────────────────────────────────────
+function selectGenre(el) {
+  document.querySelectorAll('#genre-grid .genre-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  state.selectedGenre = el.textContent;
+}
+
+function toggleChar(el) {
+  const name = el.dataset.char;
+  if (el.classList.contains('active')) {
+    if (state.selectedChars.length <= 1) { notify('Need at least 1 character', 'error'); return; }
+    el.classList.remove('active');
+    state.selectedChars = state.selectedChars.filter(c => c !== name);
+  } else {
+    el.classList.add('active');
+    state.selectedChars.push(name);
+  }
+}
+
+function randomize() {
+  const genres = document.querySelectorAll('#genre-grid .genre-tag');
+  genres.forEach(t => t.classList.remove('active'));
+  const pick = genres[Math.floor(Math.random() * genres.length)];
+  pick.classList.add('active');
+  state.selectedGenre = pick.textContent;
+  const chips = Array.from(document.querySelectorAll('#char-grid .char-chip'));
+  chips.forEach(c => c.classList.remove('active'));
+  state.selectedChars = [];
+  const count = 2 + Math.floor(Math.random() * 2);
+  chips.sort(() => Math.random()-.5).slice(0, count).forEach(c => {
+    c.classList.add('active'); state.selectedChars.push(c.dataset.char);
+  });
+  notify('Randomized! ✨', 'success');
+}
+
+function buildPipelineUI() {
+  const steps = [
+    { num:1, title:'Story & Prompts',   desc:'Claude API → story, 6 scene prompts, voice script, tags',  api:'Claude API',  live:true },
+    { num:2, title:'Voiceover',         desc:'ElevenLabs → 30s MP3, child narrator, playable in browser', api:'ElevenLabs',  live:true },
+    { num:3, title:'Thumbnail',         desc:'DALL-E 3 → 1024×1792 vibrant character thumbnail',          api:'DALL-E 3',    live:true },
+    { num:4, title:'Video Clips (×6)',  desc:'Runway Gen-3 → 6 × 5s clips at 1080×1920 (parallel)',       api:'Runway',      live:false },
+    { num:5, title:'Video Assembly',    desc:'Creatomate → stitches clips + audio → final MP4',            api:'Creatomate',  live:false }
+  ];
+  const container = document.getElementById('pipeline-steps');
+  container.innerHTML = steps.map(s => `
+    <div class="pipe-step" id="pstep-${s.num}">
+      <div class="pipe-left">
+        <div class="pipe-num" id="pnum-${s.num}">${s.num}</div>
+        ${s.num < steps.length ? '<div class="pipe-line"></div>' : ''}
+      </div>
+      <div class="pipe-body">
+        <div class="pipe-title">${s.title}</div>
+        <div class="pipe-desc">${s.desc}</div>
+        <div class="pipe-pills">
+          <span class="pill ${s.live ? 'live' : ''}">${s.api}</span>
+          ${s.live ? '<span class="pill live">REAL API</span>' : '<span class="pill warn">NEEDS KEY</span>'}
+        </div>
+        <div class="pipe-progress" id="pprog-${s.num}" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="pfill-${s.num}"></div></div>
+          <div class="pipe-log" id="plog-${s.num}"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function resetPipeline() {
+  for(let i=1;i<=5;i++){
+    const n = document.getElementById('pnum-'+i);
+    if(n) { n.className='pipe-num'; n.textContent=i; }
+    const pp = document.getElementById('pprog-'+i);
+    if(pp) pp.style.display='none';
+    const pf = document.getElementById('pfill-'+i);
+    if(pf) pf.style.width='0%';
+    const pl = document.getElementById('plog-'+i);
+    if(pl) pl.textContent='';
+  }
+  document.getElementById('output-panel').classList.remove('visible');
+  document.getElementById('pipeline-badge').textContent='idle';
+  document.getElementById('pipeline-badge').style.color='var(--text3)';
+  document.getElementById('op-voice-section').style.display='none';
+  document.getElementById('op-thumb-section').style.display='none';
+  document.getElementById('op-video-section').style.display='none';
+}
+
+function isOn(id) {
+  return document.getElementById('toggle-' + id)?.classList.contains('on');
+}
+
+async function startGeneration() {
+  if (state.generating) return;
+  state.generating = true;
+  resetPipeline();
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.textContent = '⏳ Generating...';
+  document.getElementById('pipeline-badge').textContent = 'running';
+  document.getElementById('pipeline-badge').style.color = 'var(--yellow)';
+  addLog('info', `Generation started — ${state.selectedGenre} — chars: ${state.selectedChars.join(', ')}`);
+
+  const moral = document.getElementById('moral-select')?.value;
+
+  try {
+    // Get active key health status first
+    let services = {};
+    try {
+      const healthRes = await fetch(api('/api/health'), { headers: getHeaders() });
+      if (healthRes.ok) {
+        const healthData = await healthRes.json();
+        services = healthData.services || {};
+      }
+    } catch (e) {
+      console.error("Health check failed:", e);
+    }
+
+    // ── STEP 1: STORY (REAL) ──────────────────────────────
+    setStep(1, 'active', 'Generating story with LLM...');
+    startProgress(1, 3000);
+
+    const storyRes = await fetch(api('/api/story'), {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        genre: state.selectedGenre,
+        characters: state.selectedChars,
+        moral: moral === 'auto' ? null : moral,
+        style: state.settings.style
+      })
+    });
+
+    if (!storyRes.ok) throw new Error(`Story API: ${storyRes.status} ${await storyRes.text()}`);
+    const story = await storyRes.json();
+    state.lastStory = story;
+    setStep(1, 'done', `Story ready: "${story.title}"`);
+    addLog('ok', `Story: "${story.title}"`);
+    showOutputPartial(story);
+
+    // ── STEP 2: VOICE (REAL) ──────────────────────────────
+    let hasVoice = false;
+    if (isOn('run-voice')) {
+      if (services.elevenlabs !== 'ok' && !state.keys.elevenlabs) {
+        setStep(2, 'skipped', 'Voiceover skipped: ElevenLabs API key missing/invalid');
+        addLog('warn', 'Voiceover skipped: ElevenLabs API key missing or invalid');
+      } else {
+        setStep(2, 'active', 'Sending script to ElevenLabs...');
+        startProgress(2, 6000);
+
+        try {
+          const voiceRes = await fetch(api('/api/voice'), {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({
+              text: story.voice,
+              voicePreset: state.settings.voice
+            })
+          });
+
+          if (!voiceRes.ok) throw new Error(`Voice API: ${voiceRes.status}`);
+          const audioBlob = await voiceRes.blob();
+          state.lastAudioBlob = audioBlob;
+          const audioUrl = URL.createObjectURL(audioBlob);
+          const audioEl = document.getElementById('op-audio');
+          audioEl.src = audioUrl;
+          document.getElementById('op-voice-section').style.display = 'block';
+          document.getElementById('op-voice-text').textContent = story.voice;
+          setStep(2, 'done', 'Voiceover ready — click play below');
+          addLog('ok', 'Voice generated (ElevenLabs)');
+          hasVoice = true;
+
+          // Track URL for DB
+          finalVoiceUrl = audioUrl;
+          if (supabaseClient) {
+            try {
+              const { data: { session } } = await supabaseClient.auth.getSession();
+              if (session) {
+                const path = `${session.user.id}/voice_${Date.now()}.mp3`;
+                const publicUrl = await tryUploadToStorage('media', path, audioBlob);
+                if (publicUrl) {
+                  finalVoiceUrl = publicUrl;
+                  audioEl.src = publicUrl;
+                }
+              }
+            } catch (err) {
+              console.warn("Storage voice upload failed:", err);
+            }
+          }
+        } catch (voiceErr) {
+          console.error(voiceErr);
+          setStep(2, 'skipped', `Voiceover failed: ${voiceErr.message}. Skipping...`);
+          addLog('err', `Voiceover failed: ${voiceErr.message}. Proceeding without audio...`);
+        }
+      }
+    } else {
+      setStep(2, 'skipped', 'Skipped');
+      addLog('warn', 'Voice step skipped');
+    }
+
+    // ── STEP 3: THUMBNAIL (REAL) ──────────────────────────
+    if (isOn('run-thumb')) {
+      if (services.openai !== 'ok' && !state.keys.openai) {
+        setStep(3, 'skipped', 'Thumbnail skipped: OpenAI API key missing/invalid');
+        addLog('warn', 'Thumbnail skipped: OpenAI API key missing or invalid');
+      } else {
+        setStep(3, 'active', 'Generating thumbnail with DALL-E 3...');
+        startProgress(3, 14000);
+
+        try {
+          const thumbRes = await fetch(api('/api/thumbnail'), {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({
+              title: story.title,
+              characters: state.selectedChars,
+              genre: state.selectedGenre,
+              style: state.settings.style
+            })
+          });
+
+          if (!thumbRes.ok) throw new Error(`Thumbnail API: ${thumbRes.status}`);
+          const thumbData = await thumbRes.json();
+          const thumbImg = document.getElementById('op-thumb-img');
+          thumbImg.src = thumbData.url;
+          document.getElementById('op-thumb-section').style.display = 'block';
+          setStep(3, 'done', 'Thumbnail generated');
+          addLog('ok', 'Thumbnail generated (DALL-E 3)');
+
+          // Track URL for DB
+          finalThumbUrl = thumbData.url;
+          if (supabaseClient) {
+            try {
+              const { data: { session } } = await supabaseClient.auth.getSession();
+              if (session) {
+                const path = `${session.user.id}/thumb_${Date.now()}.png`;
+                const blobRes = await fetch(thumbData.url);
+                const blob = await blobRes.blob();
+                const publicUrl = await tryUploadToStorage('media', path, blob);
+                if (publicUrl) {
+                  finalThumbUrl = publicUrl;
+                  thumbImg.src = publicUrl;
+                }
+              }
+            } catch (err) {
+              console.warn("Storage thumbnail upload failed:", err);
+            }
+          }
+        } catch (thumbErr) {
+          console.error(thumbErr);
+          setStep(3, 'skipped', `Thumbnail failed: ${thumbErr.message}`);
+          addLog('err', `Thumbnail failed: ${thumbErr.message}. Skipping...`);
+        }
+      }
+    } else {
+      setStep(3, 'skipped', 'Skipped');
+    }
+
+    // ── STEP 4: VIDEO (REAL, slow) ────────────────────────
+    let clips = [];
+    if (isOn('run-video')) {
+      if (services.runway !== 'ok' && !state.keys.runway) {
+        setStep(4, 'skipped', 'Video skipped: Runway API key missing/invalid');
+        addLog('warn', 'Video generation skipped: Runway API key missing or invalid');
+      } else {
+        setStep(4, 'active', 'Submitting 6 scenes to Runway Gen-3 Turbo asynchronously...');
+        addLog('info', 'Submitting 6 video tasks to Runway...');
+
+        const videoRes = await fetch(api('/api/video'), {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({
+            scenes: story.scenes,
+            style: state.settings.style,
+            async: true
+          })
+        });
+
+        if (!videoRes.ok) throw new Error(`Video API: ${videoRes.status}`);
+        const videoData = await videoRes.json();
+
+        if (!videoData.tasks?.length) {
+          throw new Error(`Failed to start video generation: ${JSON.stringify(videoData)}`);
+        }
+
+        // Check if any specific scenes failed to submit
+        const failedSubmissions = videoData.tasks.filter(t => !t.ok);
+        if (failedSubmissions.length > 0) {
+          const errors = failedSubmissions.map(f => `Scene ${f.scene}: ${f.error}`).join(', ');
+          throw new Error(`Failed to submit Runway tasks: ${errors}`);
+        }
+
+        const tasks = videoData.tasks;
+        addLog('ok', `Successfully created 6 Runway video tasks. Polling progress...`);
+
+        const completedUrls = new Array(tasks.length).fill(null);
+        let completedCount = 0;
+        const failedTasks = [];
+
+        await Promise.all(tasks.map(async (t) => {
+          let attempts = 0;
+          const maxAttempts = 120;
+          
+          while (attempts < maxAttempts) {
+            await new Promise(r => setTimeout(r, 5000));
+            attempts++;
+
+            try {
+              const statusRes = await fetch(api(`/api/video/task/${t.taskId}`), {
+                headers: getHeaders()
+              });
+              
+              if (!statusRes.ok) continue;
+              
+              const taskInfo = await statusRes.json();
+              
+              if (taskInfo.status === 'SUCCEEDED' || taskInfo.status === 'succeeded') {
+                const url = taskInfo.output?.[0] || (taskInfo.output && taskInfo.output.url);
+                if (url) {
+                  completedUrls[t.scene - 1] = url;
+                  completedCount++;
+                  setStep(4, 'active', `Generating video clips: ${completedCount}/6 completed...`);
+                  addLog('info', `Scene ${t.scene} generated successfully!`);
+                  break;
+                } else {
+                  throw new Error(`Task succeeded but output URL was empty.`);
+                }
+              }
+
+              if (taskInfo.status === 'FAILED' || taskInfo.status === 'failed') {
+                const errMsg = taskInfo.error || "Unknown error";
+                failedTasks.push({ scene: t.scene, error: errMsg });
+                addLog('err', `Scene ${t.scene} generation failed: ${errMsg}`);
+                break;
+              }
+              
+              setStep(4, 'active', `Generating video clips: ${completedCount}/6 completed (Scene ${t.scene} is ${taskInfo.status.toLowerCase()})...`);
+            } catch (pollErr) {
+              console.error(`Error polling scene ${t.scene}:`, pollErr);
+            }
+          }
+
+          if (!completedUrls[t.scene - 1] && !failedTasks.find(f => f.scene === t.scene)) {
+            failedTasks.push({ scene: t.scene, error: "Task polling timed out." });
+            addLog('err', `Scene ${t.scene} polling timed out.`);
+          }
+        }));
+
+        if (failedTasks.length > 0) {
+          throw new Error(`Failed to generate ${failedTasks.length} scene(s). First failure: ${failedTasks[0].error}`);
+        }
+
+        clips = completedUrls;
+        addLog('ok', `All 6 video clips successfully generated via Runway`);
+        setStep(4, 'done', '6 clips generated successfully');
+      }
+    } else {
+      setStep(4, 'skipped', 'Video generation skipped (toggle off or no Runway key)');
+      addLog('warn', 'Video generation skipped');
+    }
+
+    // ── STEP 5: ASSEMBLY ───────────────────────────────
+    if (isOn('run-assemble') && clips.length) {
+      if (services.creatomate !== 'ok' && !state.keys.creatomate) {
+        setStep(5, 'skipped', 'Assembly skipped: Creatomate API key missing/invalid');
+        addLog('warn', 'Assembly skipped: Creatomate API key missing or invalid');
+      } else {
+        setStep(5, 'active', 'Stitching clips with Creatomate...');
+        startProgress(5, 200000);
+
+        try {
+          const audioUrl = state.lastAudioBlob
+            ? await uploadBlobAsUrl(state.lastAudioBlob)
+            : null;
+
+          const assembleRes = await fetch(api('/api/assemble'), {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ videoUrls: clips, audioUrl, title: story.title })
+          });
+
+          if (!assembleRes.ok) throw new Error(`Assemble API: ${assembleRes.status}`);
+          const assembleData = await assembleRes.json();
+          if (assembleData.url) {
+            const link = document.getElementById('op-video-link');
+            link.href = assembleData.url;
+            document.getElementById('op-video-section').style.display = 'block';
+            setStep(5, 'done', 'Final video assembled successfully');
+            addLog('ok', 'Final video assembled (Creatomate)');
+            finalVideoUrl = assembleData.url;
+          } else {
+            throw new Error(assembleData.error || "Failed to retrieve assembled video URL.");
+          }
+        } catch (assembleErr) {
+          console.error(assembleErr);
+          setStep(5, 'skipped', `Assembly failed: ${assembleErr.message}`);
+          addLog('err', `Assembly failed: ${assembleErr.message}. Skipping...`);
+        }
+      }
+    } else {
+      setStep(5, 'skipped', 'Assembly skipped');
+    }
+
+    // ── DONE ──────────────────────────────────────────────
+    document.getElementById('pipeline-badge').textContent = 'complete ✓';
+    document.getElementById('pipeline-badge').style.color = 'var(--green)';
+    notify('Pipeline complete! ✅', 'success');
+    addLog('ok', `Pipeline complete — "${story.title}"`);
+
+    // Sync generation to Supabase DB
+    if (supabaseClient) {
+      await saveGenerationToDB(story, finalVoiceUrl, finalThumbUrl, finalVideoUrl);
+    }
+
+  } catch (err) {
+    console.error(err);
+    addLog('err', `Pipeline error: ${err.message}`);
+    notify(`Error: ${err.message}`, 'error');
+    document.getElementById('pipeline-badge').textContent = 'error';
+    document.getElementById('pipeline-badge').style.color = 'var(--red)';
+    // Mark the active step as error
+    for(let i=1;i<=5;i++){
+      const n = document.getElementById('pnum-'+i);
+      if(n?.classList.contains('active')) { n.className='pipe-num error'; n.textContent='✕'; }
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = '✨ Generate Video';
+    state.generating = false;
+  }
+}
+
+// Upload blob to a temporary URL service for Creatomate (if needed)
+// In production, upload to your own storage (S3 etc.)
+async function uploadBlobAsUrl(blob) {
+  // Fallback: return null if no upload service configured
+  // For demo, just return null (Creatomate will assemble without audio)
+  return null;
+}
+
+function setStep(num, status, msg) {
+  const n = document.getElementById('pnum-'+num);
+  const pp = document.getElementById('pprog-'+num);
+  const pl = document.getElementById('plog-'+num);
+  if (status === 'active') {
+    n.className = 'pipe-num active';
+    if(pp) pp.style.display = 'block';
+    if(pl) pl.textContent = msg;
+  } else if (status === 'done') {
+    n.className = 'pipe-num done'; n.textContent = '✓';
+    if(pp) { const pf = document.getElementById('pfill-'+num); if(pf) pf.style.width='100%'; }
+    if(pl) pl.textContent = msg;
+  } else if (status === 'error') {
+    n.className = 'pipe-num error'; n.textContent = '✕';
+    if(pl) pl.textContent = msg;
+  } else if (status === 'skipped') {
+    n.className = 'pipe-num skipped';
+    if(pl) pl.textContent = msg;
+  }
+}
+
+function startProgress(num, durationMs) {
+  const pf = document.getElementById('pfill-'+num);
+  if (!pf) return;
+  let pct = 0;
+  const iv = setInterval(() => {
+    pct += 1;
+    if (pf) pf.style.width = Math.min(pct, 92) + '%';
+    if (pct >= 92) clearInterval(iv);
+  }, durationMs / 92);
+}
+
+function showOutputPartial(story) {
+  const panel = document.getElementById('output-panel');
+  panel.classList.add('visible');
+  document.getElementById('op-title').textContent = story.title || '';
+  document.getElementById('op-story').textContent = story.story || '';
+  document.getElementById('op-description').textContent = story.description || '';
+  const prompts = document.getElementById('op-prompts');
+  prompts.innerHTML = (story.scenes || []).map((s,i) =>
+    `<div class="scene-prompt"><span class="scene-num">S${i+1}</span>${s}</div>`
+  ).join('');
+  const tagsEl = document.getElementById('op-tags');
+  tagsEl.innerHTML = (story.tags || []).map(t =>
+    `<span style="font-size:11px;font-family:var(--mono);padding:3px 8px;background:var(--bg4);border:1px solid var(--border);border-radius:4px;color:var(--text3)">#${t}</span>`
+  ).join('');
+}
+
+function copyAllPrompts() {
+  const text = document.getElementById('op-prompts').innerText;
+  navigator.clipboard?.writeText(text).then(() => notify('Scene prompts copied!', 'success'));
+}
+
+function copyDescription() {
+  const text = document.getElementById('op-description').textContent;
+  navigator.clipboard?.writeText(text).then(() => notify('Description copied!', 'success'));
+}
+
+function saveToLog() {
+  const title = document.getElementById('op-title').textContent;
+  if (title) addLog('info', `Output saved — "${title}"`);
+  notify('Saved to log ✓', 'success');
+}
+
+// ─────────────────────────────────────────────────────────────
+// CHARACTER CONFIG
+// ─────────────────────────────────────────────────────────────
+function buildCharConfig() {
+  const grid = document.getElementById('char-config-grid');
+  grid.innerHTML = Object.entries(CHARS).map(([name, c]) => `
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:24px">${c.emoji}</span>
+        <div class="card-title">${name}</div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:5px">Visual prompt injected into every scene</div>
+      <textarea rows="3" id="charprompt-${name}">${c.prompt}</textarea>
+    </div>`).join('');
+}
+
+function saveCharacters() {
+  Object.keys(CHARS).forEach(name => {
+    const el = document.getElementById('charprompt-' + name);
+    if (el) CHARS[name].prompt = el.value;
+  });
+  notify('Character configs saved ✓', 'success');
+  addLog('ok', 'Character prompts updated');
+}
+
+// ─────────────────────────────────────────────────────────────
+// SCHEDULE
+// ─────────────────────────────────────────────────────────────
+function buildSchedule() {
+  const grid = document.getElementById('sched-grid');
+  grid.innerHTML = SCHEDULE.map((d,i) => `
+    <div class="sched-day ${i===0?'today':''}" onclick="showSchedDay(${d.d})">
+      <div class="sched-d">${d.d}</div>
+      <div class="sched-label" style="color:${d.color}">${d.theme.split(' ').slice(0,2).join(' ')}</div>
+      <div class="sched-dot" style="background:${d.color}"></div>
+    </div>`).join('');
+}
+
+let currentSchedDay = null;
+function showSchedDay(d) {
+  const day = SCHEDULE.find(s => s.d === d);
+  if (!day) return;
+  currentSchedDay = day;
+  const panel = document.getElementById('sched-detail');
+  panel.style.display = 'block';
+  document.getElementById('sched-detail-title').textContent = `Day ${day.d} — ${day.theme}`;
+  document.getElementById('sched-detail-sub').textContent = `Genre: ${day.genre}`;
+  document.getElementById('sched-detail-body').textContent = day.note;
+}
+
+function genFromSchedule() {
+  if (!currentSchedDay) return;
+  // Pre-select genre matching schedule day
+  const genre = currentSchedDay.genre;
+  document.querySelectorAll('#genre-grid .genre-tag').forEach(t => {
+    t.classList.remove('active');
+    if (t.textContent.toLowerCase().includes(genre.toLowerCase().split(' ')[0])) t.classList.add('active');
+  });
+  showPage('generator', document.querySelector('[onclick*="generator"]'));
+  setTimeout(() => { notify(`Day ${currentSchedDay.d}: ${currentSchedDay.theme}`, 'success'); }, 300);
+}
+
+// ─────────────────────────────────────────────────────────────
+// LOGS
+// ─────────────────────────────────────────────────────────────
+function addLog(type, msg) {
+  const now = new Date();
+  const t = now.toTimeString().slice(0,8);
+  state.logs.unshift({ type, msg, t });
+  if (state.logs.length > 300) state.logs.pop();
+  renderLogs();
+  localStorage.setItem('ks_logs', JSON.stringify(state.logs.slice(0,100)));
+}
+
+function loadLogs() {
+  try { const l = localStorage.getItem('ks_logs'); if(l) state.logs = JSON.parse(l); } catch(e){}
+  renderLogs();
+}
+
+function renderLogs() {
+  const area = document.getElementById('main-log-area');
+  if (!area) return;
+  const colorMap = { ok:'log-ok', info:'log-info', warn:'log-warn', err:'log-err' };
+  area.innerHTML = state.logs.map(l =>
+    `<div class="log-line"><span class="log-time">${l.t}</span><span class="${colorMap[l.type]||'log-info'}">${l.msg}</span></div>`
+  ).join('') || '<div style="color:var(--text3);font-size:11px">No logs yet.</div>';
+}
+
+function clearLogs() {
+  state.logs = []; localStorage.removeItem('ks_logs'); renderLogs();
+}
+
+// ─────────────────────────────────────────────────────────────
+// TOGGLES / NOTIFY
+// ─────────────────────────────────────────────────────────────
+function toggleSwitch(id) {
+  const el = document.getElementById('toggle-' + id);
+  if (el) el.classList.toggle('on');
+}
+
+function notify(msg, type) {
+  const el = document.getElementById('notif');
+  document.getElementById('notif-icon').textContent = type === 'success' ? '✅' : '❌';
+  document.getElementById('notif-text').textContent = msg;
+  el.className = 'notif show ' + (type||'');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ─────────────────────────────────────────────────────────────
+// SUPABASE OPERATIONS & AUTH HELPERS
+// ─────────────────────────────────────────────────────────────
+async function tryUploadToStorage(bucket, path, blobOrFile) {
+  if (!supabaseClient) return null;
+  try {
+    const { data, error } = await supabaseClient.storage.from(bucket).upload(path, blobOrFile, {
+      cacheControl: '3600',
+      upsert: true
+    });
+    if (error) {
+      console.warn(`Storage upload failed for path ${path}:`, error.message);
+      return null;
+    }
+    const { data: { publicUrl } } = supabaseClient.storage.from(bucket).getPublicUrl(path);
+    return publicUrl;
+  } catch (err) {
+    console.error("Storage upload error:", err);
+    return null;
+  }
+}
+
+async function saveGenerationToDB(story, voiceUrl, thumbnailUrl, videoUrl) {
+  if (!supabaseClient) return;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+
+    const payload = {
+      user_id: session.user.id,
+      title: story.title,
+      story: story.story,
+      genre: state.selectedGenre,
+      characters: state.selectedChars,
+      style: state.settings.style,
+      moral: story.moral || '',
+      voice_url: voiceUrl || '',
+      thumbnail_url: thumbnailUrl || '',
+      video_url: videoUrl || '',
+      scenes: story.scenes || []
+    };
+
+    const { error } = await supabaseClient.from('generations').insert(payload);
+    if (error) {
+      console.error("DB save error:", error);
+      addLog('err', `Database save failed: ${error.message}`);
+    } else {
+      addLog('ok', `Generation saved to database`);
+      loadHistory();
+    }
+  } catch (err) {
+    console.error("DB save general error:", err);
+  }
+}
+
+async function initSupabase() {
+  try {
+    const configRes = await fetch('/api/config');
+    if (!configRes.ok) throw new Error("Failed to fetch database configuration");
+    const config = await configRes.json();
+
+    if (config.supabaseUrl && config.supabaseKey) {
+      supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+
+      // Track auth state changes
+      supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT') {
+          window.location.href = '/';
+        }
+      });
+
+      // Fetch user session
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = '/';
+      } else {
+        document.getElementById('user-profile-section').style.display = 'block';
+        document.getElementById('user-email').textContent = session.user.email;
+        loadHistory();
+      }
+    } else {
+      console.warn("Supabase not configured on backend. History and Auth are disabled.");
+      addLog('warn', 'Supabase credentials missing. Studio running in offline mode.');
+    }
+  } catch (err) {
+    console.error("Supabase init error:", err);
+    addLog('err', `Supabase connection failed: ${err.message}`);
+  }
+}
+
+async function signOutUser() {
+  if (supabaseClient) {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) notify(`Logout error: ${error.message}`, 'error');
+    else window.location.href = '/';
+  } else {
+    window.location.href = '/';
+  }
+}
+
+async function loadHistory() {
+  const loading = document.getElementById('history-loading');
+  const empty = document.getElementById('history-empty');
+  const dbError = document.getElementById('history-db-error');
+  const grid = document.getElementById('history-grid');
+  
+  if (!supabaseClient) {
+    loading.style.display = 'none';
+    dbError.style.display = 'block';
+    dbError.innerHTML = `⚠️ <strong>Supabase connection offline.</strong><br>Check backend environment variables for SUPABASE_URL and SUPABASE_KEY.`;
+    return;
+  }
+  
+  loading.style.display = 'block';
+  empty.style.display = 'none';
+  dbError.style.display = 'none';
+  grid.style.display = 'none';
+  grid.innerHTML = '';
+  
+  try {
+    const { data, error } = await supabaseClient
+      .from('generations')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error("DB history fetch error:", error);
+      if (error.code === 'PGRST404' || error.message.includes('does not exist')) {
+        dbError.style.display = 'block';
+      } else {
+        notify(`Failed to fetch history: ${error.message}`, 'error');
+      }
+      loading.style.display = 'none';
+      return;
+    }
+    
+    loading.style.display = 'none';
+    if (!data || data.length === 0) {
+      empty.style.display = 'block';
+    } else {
+      grid.style.display = 'grid';
+      grid.innerHTML = data.map(g => `
+        <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;min-height:320px;">
+          <div>
+            <div style="position:relative;">
+              <img src="${g.thumbnail_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&q=80'}" style="width:100%;height:150px;object-fit:cover;border-radius:8px;border:1px solid var(--border);" alt="thumbnail">
+              <span style="position:absolute;bottom:8px;right:8px;font-size:10px;background:rgba(0,0,0,0.7);padding:2px 6px;border-radius:4px;color:#fff;font-family:var(--sans);">${g.genre}</span>
+            </div>
+            <div style="font-size:14px;font-weight:600;margin-top:12px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;" title="${g.title}">${g.title}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px;font-family:var(--mono);">${new Date(g.created_at).toLocaleDateString()}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5;">${g.story}</div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;">
+            ${g.video_url ? `<a href="${g.video_url}" target="_blank" class="btn green small" style="flex:1;justify-content:center;text-decoration:none;">⬇ Download MP4</a>` : ''}
+            <button class="btn small" onclick='viewHistoryItem(${JSON.stringify(g).replace(/'/g, "&apos;")})' style="flex:1;justify-content:center;">🔍 View Story</button>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (err) {
+    console.error("History fetch general error:", err);
+    loading.style.display = 'none';
+    notify("Error loading history", "error");
+  }
+}
+
+function viewHistoryItem(g) {
+  showPage('generator', document.querySelector('[onclick*="generator"]'));
+  const panel = document.getElementById('output-panel');
+  panel.classList.add('visible');
+  
+  document.getElementById('op-title').textContent = g.title || '';
+  document.getElementById('op-story').textContent = g.story || '';
+  document.getElementById('op-description').textContent = g.description || '';
+  
+  const prompts = document.getElementById('op-prompts');
+  const scenes = Array.isArray(g.scenes) ? g.scenes : JSON.parse(g.scenes || '[]');
+  prompts.innerHTML = scenes.map((s,i) =>
+    `<div class="scene-prompt"><span class="scene-num">S${i+1}</span>${s}</div>`
+  ).join('');
+  
+  const tagsEl = document.getElementById('op-tags');
+  const tags = Array.isArray(g.tags) ? g.tags : [];
+  tagsEl.innerHTML = tags.map(t =>
+    `<span style="font-size:11px;font-family:var(--mono);padding:3px 8px;background:var(--bg4);border:1px solid var(--border);border-radius:4px;color:var(--text3)">#${t}</span>`
+  ).join('');
+  
+  if (g.voice_url) {
+    const audioEl = document.getElementById('op-audio');
+    audioEl.src = g.voice_url;
+    document.getElementById('op-voice-section').style.display = 'block';
+    document.getElementById('op-voice-text').textContent = g.story || ''; // fallback voice transcription
+  } else {
+    document.getElementById('op-voice-section').style.display = 'none';
+  }
+  
+  if (g.thumbnail_url) {
+    const thumbImg = document.getElementById('op-thumb-img');
+    thumbImg.src = g.thumbnail_url;
+    document.getElementById('op-thumb-section').style.display = 'block';
+  } else {
+    document.getElementById('op-thumb-section').style.display = 'none';
+  }
+  
+  if (g.video_url) {
+    const link = document.getElementById('op-video-link');
+    link.href = g.video_url;
+    document.getElementById('op-video-section').style.display = 'block';
+  } else {
+    document.getElementById('op-video-section').style.display = 'none';
+  }
+  
+  notify(`Loaded "${g.title}"!`, 'success');
+}
+
+// ─────────────────────────────────────────────────────────────
+// INIT LOG
+// ─────────────────────────────────────────────────────────────
+addLog('info', 'VibeForge Studio loaded');
+</script>
+</body>
+</html>

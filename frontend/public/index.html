@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibeForge — Create content before your coffee gets cold</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #04060a;
+      --card-bg: rgba(10, 15, 28, 0.65);
+      --accent: #7c6fff;
+      --accent-glow: rgba(124, 111, 255, 0.15);
+      --pink: #ff7eb3;
+      --indigo: #6366f1;
+      --cyan: #06b6d4;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(124, 111, 255, 0.4);
+      --font-sans: 'Inter', sans-serif;
+      --font-display: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Grid Background Effect */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Floating Blurry Orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.3;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .orb-1 {
+      top: 10%;
+      left: 15%;
+      width: 400px;
+      height: 400px;
+      background: var(--indigo);
+    }
+    .orb-2 {
+      top: 40%;
+      right: 10%;
+      width: 500px;
+      height: 500px;
+      background: var(--pink);
+    }
+    .orb-3 {
+      bottom: 5%;
+      left: 20%;
+      width: 450px;
+      height: 450px;
+      background: var(--cyan);
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(4, 6, 10, 0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      font-size: 24px;
+    }
+
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--text-muted);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      color: #ffffff;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      background: #6a5fff;
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      max-width: 1200px;
+      margin: 160px auto 100px;
+      padding: 0 40px;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .badge {
+      display: inline-flex;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: rgba(124, 111, 255, 0.1);
+      border: 1px solid rgba(124, 111, 255, 0.3);
+      color: #a99fff;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: 64px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--accent) 20%, var(--pink) 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tagline {
+      font-size: 22px;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto 40px;
+      line-height: 1.5;
+    }
+
+    .tagline strong {
+      color: var(--text);
+    }
+
+    /* Features Grid */
+    .features {
+      max-width: 1200px;
+      margin: 80px auto;
+      padding: 0 40px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .features-title {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .features-title h2 {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .features-title p {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--border-focus);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 24px;
+      color: var(--accent);
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Modal Overlay styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 4, 8, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .auth-card {
+      background: #0d111d;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+      transform: scale(0.92);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-overlay.active .auth-card {
+      transform: scale(1);
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .auth-submit-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      background: var(--accent);
+      color: #ffffff;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 10px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .auth-submit-btn:hover {
+      background: #6a5fff;
+    }
+
+    .auth-error {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 8px;
+      color: #ef4444;
+      padding: 12px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .auth-success {
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      border-radius: 8px;
+      color: #22c55e;
+      padding: 12px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: none;
+      line-height: 1.4;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .close-modal:hover {
+      color: var(--text);
+    }
+
+    footer {
+      text-align: center;
+      padding: 60px 40px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 14px;
+      z-index: 10;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Header -->
+  <header>
+    <a href="#" class="logo-container">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">VibeForge</span>
+    </a>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="openAuthModal('login')">Sign In</button>
+      <button class="btn btn-primary" onclick="openAuthModal('signup')">Get Started</button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="badge">🚀 Unified Video Studio</div>
+    <h1>Create content before your <span>coffee gets cold.</span></h1>
+    <p class="tagline">
+      Write stories and generate full production-ready videos in one click. 
+      <strong>VibeForge</strong> fuses LLM intelligence, child-voice synthesis, and runway parallel scene rendering into one unified content factory.
+    </p>
+    <div style="display:flex; justify-content:center; gap:16px;">
+      <button class="btn btn-primary" style="padding:14px 28px; font-size:16px;" onclick="openAuthModal('signup')">
+        Start Creating Now <span style="font-size:18px;">✨</span>
+      </button>
+      <a href="#features" class="btn btn-secondary" style="padding:14px 28px; font-size:16px;">See How It Works</a>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="features-title">
+      <h2>One Platform. Full Automation.</h2>
+      <p>Everything you need to go from a simple prompt to a high-retention video.</p>
+    </div>
+    <div class="features-grid">
+      
+      <!-- Feature 1 -->
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3>Story Generation</h3>
+        <p>State-of-the-art LLMs (Claude & Gemini) generate rich narrative arcs, optimized video scenes, and narration scripts in seconds.</p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature-card">
+        <div class="feature-icon">🎙️</div>
+        <h3>Voice & Audio Synthesis</h3>
+        <p>Premium ElevenLabs integration converts scripts into expressive child narrator voices or warm voice presets with automatic timing.</p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature-card">
+        <div class="feature-icon">🎬</div>
+        <h3>Runway Parallel Rendering</h3>
+        <p>Renders all scenes concurrently in 9:16 vertical video format, cutting standard processing time by up to 80%.</p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature-card">
+        <div class="feature-icon">🧸</div>
+        <h3>Character Consistency</h3>
+        <p>Define prompts for specific characters and automatically inject visual attributes across all scene prompts.</p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Content Planning</h3>
+        <p>Organize uploads with an integrated 30-day schedule planner. Directly initiate generations matching daily content milestones.</p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="feature-card">
+        <div class="feature-icon">📜</div>
+        <h3>Generation History</h3>
+        <p>All previously generated stories, prompts, voice overs, thumbnails, and final video downloads are securely saved to your account database.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2026 VibeForge. All rights reserved.</p>
+  </footer>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="auth-modal" onclick="closeAuthModalOnOverlay(event)">
+    <div class="auth-card">
+      <button class="close-modal" onclick="closeAuthModal()">&times;</button>
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login" onclick="setAuthTab('login')">Log In</div>
+        <div class="auth-tab" id="tab-signup" onclick="setAuthTab('signup')">Sign Up</div>
+      </div>
+      
+      <div class="auth-error" id="auth-error"></div>
+      <div class="auth-success" id="auth-success"></div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label for="auth-email">Email Address</label>
+          <input type="email" id="auth-email" class="form-input" placeholder="you@domain.com" required autocomplete="username">
+        </div>
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="auth-submit-btn" id="auth-submit-btn">Continue</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let supabaseClient = null;
+    let currentTab = 'login'; // 'login' or 'signup'
+
+    async function initSupabase() {
+      try {
+        const configRes = await fetch('/api/config');
+        if (!configRes.ok) throw new Error("Failed to load config");
+        const config = await configRes.json();
+        
+        if (config.supabaseUrl && config.supabaseKey) {
+          supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseKey);
+          
+          // Verify session state
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (session) {
+            // Redirect immediately to studio dashboard if user is authenticated
+            window.location.href = '/studio';
+          }
+        } else {
+          console.warn("Supabase configuration not detected on server.");
+        }
+      } catch (err) {
+        console.error("Auth Supabase Init Error:", err);
+      }
+    }
+
+    function openAuthModal(tab) {
+      document.getElementById('auth-modal').classList.add('active');
+      setAuthTab(tab);
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.remove('active');
+      clearMessages();
+    }
+
+    function closeAuthModalOnOverlay(event) {
+      if (event.target.id === 'auth-modal') {
+        closeAuthModal();
+      }
+    }
+
+    function clearMessages() {
+      document.getElementById('auth-error').style.display = 'none';
+      document.getElementById('auth-success').style.display = 'none';
+    }
+
+    function setAuthTab(tab) {
+      currentTab = tab;
+      clearMessages();
+      
+      const tabLogin = document.getElementById('tab-login');
+      const tabSignup = document.getElementById('tab-signup');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      
+      if (tab === 'login') {
+        tabLogin.classList.add('active');
+        tabSignup.classList.remove('active');
+        submitBtn.textContent = 'Log In';
+      } else {
+        tabLogin.classList.remove('active');
+        tabSignup.classList.add('active');
+        submitBtn.textContent = 'Create Account';
+      }
+    }
+
+    async function handleAuthSubmit(event) {
+      event.preventDefault();
+      clearMessages();
+      
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const errorDiv = document.getElementById('auth-error');
+      const successDiv = document.getElementById('auth-success');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      
+      if (!supabaseClient) {
+        errorDiv.textContent = "Supabase configuration is missing. Cannot authenticate.";
+        errorDiv.style.display = 'block';
+        return;
+      }
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = currentTab === 'login' ? 'Logging in...' : 'Registering...';
+      
+      try {
+        if (currentTab === 'login') {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          
+          successDiv.textContent = "Success! Redirecting to studio dashboard...";
+          successDiv.style.display = 'block';
+          setTimeout(() => {
+            window.location.href = '/studio';
+          }, 1000);
+        } else {
+          const { data, error } = await supabaseClient.auth.signUp({ email, password });
+          if (error) throw error;
+          
+          if (data.session) {
+            successDiv.textContent = "Account created successfully! Redirecting to studio dashboard...";
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+              window.location.href = '/studio';
+            }, 1000);
+          } else {
+            successDiv.textContent = "Account created! Please check your email to confirm registration before logging in.";
+            successDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
+          }
+        }
+      } catch (err) {
+        errorDiv.textContent = err.message || "An authentication error occurred.";
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = currentTab === 'login' ? 'Log In' : 'Create Account';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initSupabase);
+  </script>
+</body>
+</html>
