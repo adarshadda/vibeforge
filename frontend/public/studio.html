@@ -482,8 +482,8 @@ input[type=text]:focus { border-color: var(--accent); }
         <div>
           <div class="card">
             <div class="card-title" style="margin-bottom:14px">Backend URL</div>
-            <div style="font-size:11px;color:var(--text3);margin-bottom:5px">API server (change if not running on localhost)</div>
-            <input type="text" id="setting-backend" value="http://localhost:3000" placeholder="http://localhost:3000">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:5px">Leave empty to use this site’s server (recommended on Render). For local dev, use http://localhost:3000 only when the API runs separately.</div>
+            <input type="text" id="setting-backend" value="" placeholder="Auto (same origin)">
           </div>
         </div>
       </div>
@@ -543,7 +543,7 @@ const state = {
   settings: {
     style: '3D Pixar cartoon',
     voice: 'cheerful-child',
-    backend: 'http://localhost:3000'
+    backend: ''
   }
 };
 
@@ -620,9 +620,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   checkHealth();
 });
 
+function isLocalhostBackend(url) {
+  if (!url) return false;
+  try {
+    const { hostname } = new URL(url);
+    return hostname === 'localhost' || hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+function getBackendBase() {
+  const fromInput = document.getElementById('setting-backend')?.value?.trim();
+  const fromState = state.settings.backend?.trim();
+  const configured = fromInput || fromState;
+  if (configured && !(isLocalhostBackend(configured) && !isLocalhostBackend(window.location.origin))) {
+    return configured.replace(/\/$/, '');
+  }
+  return window.location.origin;
+}
+
 function api(path) {
-  const base = document.getElementById('setting-backend')?.value || state.settings.backend || 'http://localhost:3000';
-  return `${base}${path}`;
+  return `${getBackendBase()}${path}`;
 }
 
 function getHeaders() {
@@ -772,8 +791,13 @@ function loadSettings() {
   try {
     const s = localStorage.getItem('ks_settings');
     if (s) Object.assign(state.settings, JSON.parse(s));
+    // Saved localhost URL breaks production (e.g. Render) — use same origin instead
+    if (isLocalhostBackend(state.settings.backend) && !isLocalhostBackend(window.location.origin)) {
+      state.settings.backend = '';
+      localStorage.setItem('ks_settings', JSON.stringify(state.settings));
+    }
     const backendEl = document.getElementById('setting-backend');
-    if (backendEl) backendEl.value = state.settings.backend;
+    if (backendEl) backendEl.value = state.settings.backend || '';
   } catch(e){}
 }
 
