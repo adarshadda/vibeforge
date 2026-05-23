@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VibeForge Studio</title>
+<!-- studio build: 2025-05-api-base-fix -->
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -198,6 +199,22 @@ input[type=text]:focus { border-color: var(--accent); }
 </style>
 </head>
 <body>
+<script>
+(function () {
+  var h = location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1') return;
+  window.__VF_FORCE_API_BASE__ = location.origin;
+  try {
+    var raw = localStorage.getItem('ks_settings');
+    if (!raw) return;
+    var o = JSON.parse(raw);
+    if (o.backend && /localhost|127\.0\.0\.1/i.test(o.backend)) {
+      o.backend = '';
+      localStorage.setItem('ks_settings', JSON.stringify(o));
+    }
+  } catch (e) {}
+})();
+</script>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -528,6 +545,7 @@ let supabaseClient = null;
 let finalVoiceUrl = "";
 let finalThumbUrl = "";
 let finalVideoUrl = "";
+let serverApiBase = null;
 
 // ─────────────────────────────────────────────────────────────
 // STATE
@@ -608,7 +626,7 @@ const SCHEDULE = [
 // INIT
 // ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  await initSupabase();
+  const config = await loadAppConfig();
   loadKeys();
   loadSettings();
   buildKeyUI();
@@ -617,8 +635,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   buildSchedule();
   loadLogs();
   updateKeyMetrics();
+  await initSupabase(config);
+  console.info('[VibeForge] API base:', getBackendBase());
   checkHealth();
 });
+
+async function loadAppConfig() {
+  try {
+    const res = await fetch('/api/config');
+    if (!res.ok) return {};
+    const config = await res.json();
+    if (config.apiBase) serverApiBase = config.apiBase.replace(/\/$/, '');
+    return config;
+  } catch {
+    return {};
+  }
+}
 
 function isLocalhostBackend(url) {
   if (!url) return false;
@@ -631,12 +663,17 @@ function isLocalhostBackend(url) {
 }
 
 function getBackendBase() {
+  if (window.__VF_FORCE_API_BASE__) return window.__VF_FORCE_API_BASE__;
+  if (serverApiBase) return serverApiBase;
+
+  const host = window.location.hostname;
+  const onLocalDev = host === 'localhost' || host === '127.0.0.1';
+  if (!onLocalDev) return window.location.origin;
+
   const fromInput = document.getElementById('setting-backend')?.value?.trim();
   const fromState = state.settings.backend?.trim();
   const configured = fromInput || fromState;
-  if (configured && !(isLocalhostBackend(configured) && !isLocalhostBackend(window.location.origin))) {
-    return configured.replace(/\/$/, '');
-  }
+  if (configured) return configured.replace(/\/$/, '');
   return window.location.origin;
 }
 
@@ -1473,12 +1510,8 @@ async function saveGenerationToDB(story, voiceUrl, thumbnailUrl, videoUrl) {
   }
 }
 
-async function initSupabase() {
+async function initSupabase(config = {}) {
   try {
-    const configRes = await fetch('/api/config');
-    if (!configRes.ok) throw new Error("Failed to fetch database configuration");
-    const config = await configRes.json();
-
     if (config.supabaseUrl && config.supabaseKey) {
       supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseKey);
 

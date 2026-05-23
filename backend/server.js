@@ -27,7 +27,11 @@ app.use(express.static(path.join(__dirname, "../frontend/public")));
 
 // ── Config Route for Supabase ─────────────────────────────────
 app.get("/api/config", (req, res) => {
+  const proto = req.get("x-forwarded-proto") || req.protocol;
+  const host = req.get("x-forwarded-host") || req.get("host");
+  const apiBase = host ? `${proto}://${host}` : "";
   res.json({
+    apiBase,
     supabaseUrl: process.env.SUPABASE_URL || "",
     supabaseKey: process.env.SUPABASE_KEY || ""
   });
@@ -35,6 +39,7 @@ app.get("/api/config", (req, res) => {
 
 // ── Studio Route ──────────────────────────────────────────────
 app.get("/studio", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   res.sendFile(path.join(__dirname, "../frontend/public/studio.html"));
 });
 
